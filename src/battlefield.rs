@@ -56,4 +56,9 @@ impl BattleField {
 
         Self { map }
     }
+
+    /// Returns all matrix map
+    pub fn get_all(&self) -> &Vec<Vec<Cell>> {
+        &self.map
+    }
 }

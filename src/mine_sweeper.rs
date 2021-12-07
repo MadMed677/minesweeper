@@ -1,5 +1,7 @@
-use crate::battlefield::BattleField;
+use js_sys;
 use wasm_bindgen::prelude::*;
+
+use crate::battlefield::BattleField;
 
 // pub fn matrix_array(rows: usize, cols: usize) -> Vec<Vec<Cell>> {
 //     let mut arr = Vec::with_capacity(rows);
@@ -43,4 +45,21 @@ impl MineSweeperEngine {
     }
 
     pub fn uncover(&self) {}
+
+    /// Returns map to the client
+    #[wasm_bindgen(js_name = getField)]
+    pub fn get_field(&self) -> js_sys::Array {
+        self.battlefield
+            .get_all()
+            .clone()
+            .into_iter()
+            .map(|cell_vec| {
+                cell_vec
+                    .clone()
+                    .into_iter()
+                    .map(JsValue::from)
+                    .collect::<js_sys::Array>()
+            })
+            .collect()
+    }
 }
