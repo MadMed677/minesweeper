@@ -8,7 +8,8 @@
     "test": "cargo test && wasm-pack test --headless"
   },
   "dependencies": {
-    "@minesweeper/engine": "file:./pkg"
+    "@minesweeper/engine": "file:./pkg",
+    "pixi.js": "^6.2.0"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "^1.1.0",
