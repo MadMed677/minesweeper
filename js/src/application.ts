@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import {
 	MineSweeperEngine,
 	Cell,
+	CellStatus,
 } from '@minesweeper/engine'
 
 const CANVAS_WIDTH = 1000;
@@ -39,11 +40,28 @@ export class Application {
 		const interactionManager = this.application.renderer.plugins.interaction as PIXI.InteractionManager
 
 		interactionManager.on('pointerup', (e: PIXI.InteractionEvent) => {
-			const entityId = Number(e.target.name)
+			const entityId = Number(e.target?.name)
+
+			if (!entityId) {
+				return
+			}
 
 			console.log('entityId: ', entityId)
-			const cell = this.minesweeperEngine.uncover(entityId)
-			console.log('cell: ', cell)
+			const cells: Array<Cell> = this.minesweeperEngine.uncover(entityId)
+			console.log('cell: ', cells, e.target)
+
+			const rect = e.target as PIXI.Graphics
+			const width = rect.width
+			const height = rect.height
+
+			rect.clear()
+			console.log('rect', rect.x, rect.y, rect.width)
+			rect.beginFill(PIXI.utils.string2hex('#D5F5E3'))
+			rect.drawRect(0, 0, width, height)
+			rect.endFill()
+
+			rect.interactive = false
+			rect.buttonMode = false
 		})
 	}
 
@@ -64,10 +82,16 @@ export class Application {
 		field.forEach((rows, row_index) => {
 			rows.forEach((cell, col_index) => {
 				const rect = new PIXI.Graphics()
+				rect.x = col_index * itemWidth + padding
+				rect.y = row_index * itemHeight + padding
 				this.application.stage.addChild(rect)
 
-				rect.beginFill(PIXI.utils.string2hex('#FCF3CF'))
-				rect.drawRect(col_index * itemWidth + padding, row_index * itemHeight + padding, itemWidth - padding, itemHeight - padding)
+				if (cell.status === CellStatus.Uncovered) {
+					rect.beginFill(PIXI.utils.string2hex('#D5F5E3'))
+				} else if (cell.status === CellStatus.Hidden) {
+					rect.beginFill(PIXI.utils.string2hex('#FCF3CF'))
+				}
+				rect.drawRect(0, 0, itemWidth - padding, itemHeight - padding)
 				rect.endFill()
 
 				rect.interactive = true
