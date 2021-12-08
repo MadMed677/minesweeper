@@ -26,9 +26,11 @@ pub struct Cell {
     ctype: CellType,
 }
 
+#[wasm_bindgen]
 impl Cell {
-    pub fn new(id: u32, ctype: CellType) -> Self {
-        Self { id, ctype }
+    #[wasm_bindgen(js_name = getId)]
+    pub fn id(&self) -> u32 {
+        self.id
     }
 }
 
@@ -41,16 +43,18 @@ pub struct BattleField {
 impl BattleField {
     pub fn new(rows: usize, cols: usize, _bombs: u16) -> Self {
         let mut map = Vec::with_capacity(rows);
+        let mut unique_id = 0;
 
         for i in 0..rows {
             map.push(Vec::with_capacity(cols));
 
             for j in 0..cols {
                 map[i].push(Cell {
-                    id: (i + j) as u32,
+                    id: unique_id,
                     ctype: CellType::Empty(0),
                 });
-                // map[i].push(Cell::new((i + j) as u32, CellType::Empty(0)));
+
+                unique_id += 1;
             }
         }
 
