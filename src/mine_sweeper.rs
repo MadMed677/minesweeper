@@ -1,24 +1,7 @@
 use js_sys;
 use wasm_bindgen::prelude::*;
 
-use crate::battlefield::BattleField;
-
-// pub fn matrix_array(rows: usize, cols: usize) -> Vec<Vec<Cell>> {
-//     let mut arr = Vec::with_capacity(rows);
-//
-//     for i in 0..rows {
-//         arr.push(Vec::with_capacity(cols));
-//
-//         for j in 0..cols {
-//             arr[i].push(Cell {
-//                 id: (i + j) as u32,
-//                 ctype: CellType::Empty(0),
-//             });
-//         }
-//     }
-//
-//     arr
-// }
+use crate::battlefield::{BattleField, CellId, CellStatus, CellType};
 
 #[wasm_bindgen]
 /// The main Minesweeper engine which contain
@@ -30,6 +13,8 @@ pub struct MineSweeperEngine {
 
 #[wasm_bindgen]
 impl MineSweeperEngine {
+    /// Creates the engine and matrix battlefield by providing
+    ///  rows and columns
     pub fn create(rows: Option<u16>, cols: Option<u16>) -> Self {
         let battle_field_rows = rows.unwrap_or(10);
         let battle_field_cols = cols.unwrap_or(10);
@@ -44,7 +29,26 @@ impl MineSweeperEngine {
         Self { battlefield }
     }
 
-    pub fn uncover(&self) {}
+    /// Uncover and mutate the cell by providing id
+    pub fn uncover(&mut self, cell_id: CellId) -> js_sys::Array {
+        let cell = self.battlefield.get_mut(cell_id);
+
+        match cell.ctype {
+            CellType::Mine => {
+                cell.status = CellStatus::Uncovered;
+            }
+            CellType::Empty(_count) => {
+                cell.status = CellStatus::Uncovered;
+            }
+        }
+
+        // Returns a vector of changed cells
+        vec![cell.clone()]
+            .clone()
+            .into_iter()
+            .map(JsValue::from)
+            .collect()
+    }
 
     /// Returns map to the client
     #[wasm_bindgen(js_name = getField)]

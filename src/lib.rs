@@ -1,7 +1,6 @@
 mod battlefield;
 mod mine_sweeper;
 
-use js_sys;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
 

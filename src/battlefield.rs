@@ -1,5 +1,7 @@
 use wasm_bindgen::prelude::*;
 
+pub type CellId = u32;
+
 /// Should contain 2 structure
 ///  1. Factory - to create Minesweeper engine
 ///  2. Engine which contain game state and provides
@@ -15,21 +17,34 @@ pub enum CellType {
     Empty(u8),
 }
 
+#[wasm_bindgen]
+#[derive(Copy, Clone)]
+pub enum CellStatus {
+    /// Default cell status
+    Hidden,
+
+    /// Cell was uncovered
+    Uncovered,
+}
+
 /// Cell represent each tile on the board
 #[wasm_bindgen]
 #[derive(Copy, Clone)]
 pub struct Cell {
-    /// Cell index
-    id: u32,
+    /// Cell identificator
+    id: CellId,
 
+    #[wasm_bindgen(skip)]
     /// Cell type
-    ctype: CellType,
+    pub ctype: CellType,
+
+    pub status: CellStatus,
 }
 
 #[wasm_bindgen]
 impl Cell {
     #[wasm_bindgen(js_name = getId)]
-    pub fn id(&self) -> u32 {
+    pub fn id(&self) -> CellId {
         self.id
     }
 }
@@ -49,9 +64,17 @@ impl BattleField {
             map.push(Vec::with_capacity(cols));
 
             for j in 0..cols {
+                // Place the bomb only on the first element
+                let ctype = if i == 0 && j == 0 {
+                    CellType::Mine
+                } else {
+                    CellType::Empty(0)
+                };
+
                 map[i].push(Cell {
                     id: unique_id,
-                    ctype: CellType::Empty(0),
+                    ctype,
+                    status: CellStatus::Hidden,
                 });
 
                 unique_id += 1;
@@ -59,6 +82,19 @@ impl BattleField {
         }
 
         Self { map }
+    }
+
+    /// Returns a link to the cell by provided `id`
+    pub fn get_mut(&mut self, id: CellId) -> &mut Cell {
+        for row in &mut self.map {
+            for col in row {
+                if col.id == id {
+                    return col;
+                }
+            }
+        }
+
+        panic!("Cell didn't find in battlefield by provided id: {}", id);
     }
 
     /// Returns all matrix map

@@ -1,11 +1,8 @@
 import * as PIXI from 'pixi.js'
 import {
-	MineSweeperEngine
+	MineSweeperEngine,
+	Cell,
 } from '@minesweeper/engine'
-
-interface Cell {
-	getId(): number
-}
 
 const CANVAS_WIDTH = 1000;
 const CANVAS_HEIGHT = 1000;
@@ -35,11 +32,19 @@ export class Application {
 
 		document.body.appendChild(this.application.view)
 
-		this.minesweeperEngine = MineSweeperEngine.create(9, 10)
+		this.minesweeperEngine = MineSweeperEngine.create(12, 9)
 
 		this.generateField(this.minesweeperEngine.getField())
 
 		const interactionManager = this.application.renderer.plugins.interaction as PIXI.InteractionManager
+
+		interactionManager.on('pointerup', (e: PIXI.InteractionEvent) => {
+			const entityId = Number(e.target.name)
+
+			console.log('entityId: ', entityId)
+			const cell = this.minesweeperEngine.uncover(entityId)
+			console.log('cell: ', cell)
+		})
 	}
 
 	private generateField(field: Array<Array<Cell>>): void {
