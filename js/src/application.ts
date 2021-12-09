@@ -1,9 +1,8 @@
 import * as PIXI from 'pixi.js'
-import {
-	MineSweeperEngine,
-	Cell,
-	CellStatus,
-} from '@minesweeper/engine'
+import {Cell, CellStatus, MineSweeperEngine,} from '@minesweeper/engine'
+
+import {CellVisual, ICellVisualProps} from './visuals/cell.visual'
+import {IVisual} from './visuals/visual.interface'
 
 const CANVAS_WIDTH = 1000;
 const CANVAS_HEIGHT = 1000;
@@ -24,6 +23,13 @@ export class Application {
 	})
 
 	private readonly minesweeperEngine: MineSweeperEngine
+
+	/**
+	 * Contains a map of cell
+	 *  - key - cell.id
+	 *  - value - instance of IVisual
+	 */
+	private readonly mapState = new Map<number, IVisual<ICellVisualProps>>()
 
 	constructor() {
 		window.__PIXI_INSPECTOR_GLOBAL_HOOK__ &&
@@ -46,22 +52,16 @@ export class Application {
 				return
 			}
 
-			console.log('entityId: ', entityId)
 			const cells: Array<Cell> = this.minesweeperEngine.uncover(entityId)
-			console.log('cell: ', cells, e.target)
 
-			const rect = e.target as PIXI.Graphics
-			const width = rect.width
-			const height = rect.height
+			const visual = this.mapState.get(entityId)
 
-			rect.clear()
-			console.log('rect', rect.x, rect.y, rect.width)
-			rect.beginFill(PIXI.utils.string2hex('#D5F5E3'))
-			rect.drawRect(0, 0, width, height)
-			rect.endFill()
+			if (!visual) {
+				throw new Error(`Cannot find visual by id: ${entityId}`)
+			}
 
-			rect.interactive = false
-			rect.buttonMode = false
+			visual.setProps({status: CellStatus.Uncovered})
+			visual.render()
 		})
 	}
 
@@ -81,23 +81,23 @@ export class Application {
 
 		field.forEach((rows, row_index) => {
 			rows.forEach((cell, col_index) => {
-				const rect = new PIXI.Graphics()
-				rect.x = col_index * itemWidth + padding
-				rect.y = row_index * itemHeight + padding
-				this.application.stage.addChild(rect)
+				const cellVisual = new CellVisual(cell.getId())
+				cellVisual.setProps({
+					position: {
+						x: col_index * itemWidth + padding,
+						y: row_index * itemHeight + padding,
+					},
+					size: {
+						width: itemWidth - padding,
+						height: itemHeight - padding,
+					},
+					status: cell.status
+				})
 
-				if (cell.status === CellStatus.Uncovered) {
-					rect.beginFill(PIXI.utils.string2hex('#D5F5E3'))
-				} else if (cell.status === CellStatus.Hidden) {
-					rect.beginFill(PIXI.utils.string2hex('#FCF3CF'))
-				}
-				rect.drawRect(0, 0, itemWidth - padding, itemHeight - padding)
-				rect.endFill()
+				cellVisual.render()
 
-				rect.interactive = true
-				rect.buttonMode = true
-
-				rect.name = String(cell.getId())
+				this.mapState.set(cell.getId(), cellVisual)
+				this.application.stage.addChild(cellVisual.graphics)
 			})
 		})
 	}
