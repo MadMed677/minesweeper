@@ -1,7 +1,7 @@
 use js_sys;
 use wasm_bindgen::prelude::*;
 
-use crate::battlefield::{BattleField, CellId, CellStatus, CellType};
+use crate::battlefield::{BattleField, Cell, CellId, CellStatus, CellType};
 
 #[wasm_bindgen]
 /// The main Minesweeper engine which contain
@@ -9,6 +9,28 @@ use crate::battlefield::{BattleField, CellId, CellStatus, CellType};
 ///  - cols
 pub struct MineSweeperEngine {
     battlefield: BattleField,
+}
+
+#[wasm_bindgen]
+#[derive(Copy, Clone)]
+pub enum WasmCTypeName {
+    Mine,
+    Empty,
+}
+
+#[wasm_bindgen]
+#[derive(Copy, Clone)]
+pub struct WasmCType {
+    pub name: WasmCTypeName,
+    pub value: u8,
+}
+
+#[wasm_bindgen]
+#[derive(Copy, Clone)]
+pub struct WasmCell {
+    pub id: CellId,
+    pub ctype: WasmCType,
+    pub status: CellStatus,
 }
 
 #[wasm_bindgen]
@@ -44,9 +66,8 @@ impl MineSweeperEngine {
 
         // Returns a vector of changed cells
         vec![cell.clone()]
-            .clone()
             .into_iter()
-            .map(JsValue::from)
+            .map(|ref cell| self.convert_cell_into_wasm(cell))
             .collect()
     }
 
@@ -55,15 +76,31 @@ impl MineSweeperEngine {
     pub fn get_field(&self) -> js_sys::Array {
         self.battlefield
             .get_all()
-            .clone()
             .into_iter()
             .map(|cell_vec| {
                 cell_vec
                     .clone()
                     .into_iter()
-                    .map(JsValue::from)
+                    .map(|ref cell| self.convert_cell_into_wasm(cell))
                     .collect::<js_sys::Array>()
             })
             .collect()
+    }
+
+    /// Converts Battlefield Cell into WasmCell structure
+    fn convert_cell_into_wasm(&self, cell: &Cell) -> JsValue {
+        let wasm_cell = WasmCell {
+            id: cell.id,
+            status: cell.status,
+            ctype: WasmCType {
+                name: match cell.ctype {
+                    CellType::Mine => WasmCTypeName::Mine,
+                    CellType::Empty(_) => WasmCTypeName::Empty,
+                },
+                value: 0,
+            },
+        };
+
+        JsValue::from(wasm_cell)
     }
 }

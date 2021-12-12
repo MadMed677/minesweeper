@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use wasm_bindgen::prelude::*;
 
 pub type CellId = u32;
@@ -28,25 +29,15 @@ pub enum CellStatus {
 }
 
 /// Cell represent each tile on the board
-#[wasm_bindgen]
 #[derive(Copy, Clone)]
 pub struct Cell {
     /// Cell identificator
-    id: CellId,
+    pub id: CellId,
 
-    #[wasm_bindgen(skip)]
     /// Cell type
     pub ctype: CellType,
 
     pub status: CellStatus,
-}
-
-#[wasm_bindgen]
-impl Cell {
-    #[wasm_bindgen(js_name = getId)]
-    pub fn id(&self) -> CellId {
-        self.id
-    }
 }
 
 /// The main map of the battle
@@ -59,16 +50,21 @@ impl BattleField {
     pub fn new(rows: usize, cols: usize, _bombs: u16) -> Self {
         let mut map = Vec::with_capacity(rows);
         let mut unique_id = 0;
+        let mut rng = rand::thread_rng();
+
+        let random_bomb_row = rng.gen_range(0..rows);
+        let random_bomb_col = rng.gen_range(0..cols);
 
         for i in 0..rows {
             map.push(Vec::with_capacity(cols));
 
             for j in 0..cols {
-                // Place the bomb only on the first element
-                let ctype = if i == 0 && j == 0 {
+                // Place the bomb in random place
+                let ctype = if i == random_bomb_row && j == random_bomb_col {
                     CellType::Mine
                 } else {
-                    CellType::Empty(0)
+                    // Create random value for each cell
+                    CellType::Empty(rng.gen_range(0..8))
                 };
 
                 map[i].push(Cell {

@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js'
-import {Cell, CellStatus, MineSweeperEngine,} from '@minesweeper/engine'
+import {WasmCell, CellStatus, MineSweeperEngine,} from '@minesweeper/engine'
 
 import {CellVisual, ICellVisualProps} from './visuals/cell.visual'
 import {IVisual} from './visuals/visual.interface'
@@ -52,7 +52,8 @@ export class Application {
 				return
 			}
 
-			const cells: Array<Cell> = this.minesweeperEngine.uncover(entityId)
+			const cells: Array<WasmCell> = this.minesweeperEngine.uncover(entityId)
+			console.log('cells: ', cells)
 
 			const visual = this.mapState.get(entityId)
 
@@ -65,7 +66,7 @@ export class Application {
 		})
 	}
 
-	private generateField(field: Array<Array<Cell>>): void {
+	private generateField(field: Array<Array<WasmCell>>): void {
 		/** Rows number is the same as `field` length */
 		const grows = field.length
 
@@ -81,7 +82,7 @@ export class Application {
 
 		field.forEach((rows, row_index) => {
 			rows.forEach((cell, col_index) => {
-				const cellVisual = new CellVisual(cell.getId())
+				const cellVisual = new CellVisual(cell.id)
 				cellVisual.setProps({
 					position: {
 						x: col_index * itemWidth + padding,
@@ -91,12 +92,13 @@ export class Application {
 						width: itemWidth - padding,
 						height: itemHeight - padding,
 					},
-					status: cell.status
+					status: cell.status,
+					ctype: cell.ctype
 				})
 
 				cellVisual.render()
 
-				this.mapState.set(cell.getId(), cellVisual)
+				this.mapState.set(cell.id, cellVisual)
 				this.application.stage.addChild(cellVisual.graphics)
 			})
 		})

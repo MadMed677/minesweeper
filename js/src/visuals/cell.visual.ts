@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js'
 import {IVisual} from './visual.interface'
-import {CellStatus} from '@minesweeper/engine'
+import {CellStatus, WasmCType, WasmCTypeName} from '@minesweeper/engine'
 
 export interface ICellVisualProps {
 	position: {
@@ -12,6 +12,7 @@ export interface ICellVisualProps {
 		height: number
 	}
 	status: CellStatus
+	ctype: WasmCType
 }
 
 export class CellVisual implements IVisual<ICellVisualProps> {
@@ -19,15 +20,23 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 	private props!: ICellVisualProps;
 
 	readonly graphics = new PIXI.Graphics()
+	private readonly text = new PIXI.Text('', {
+		fontSize: 16,
+		wordWrap: true,
+		wordWrapWidth: 50,
+		align: 'center',
+	})
 
 	constructor(id: number) {
 		this.id = id;
+
+		this.graphics.addChild(this.text)
 	}
 
 	public setProps(props: Partial<ICellVisualProps>): void {
 		// If it's a first render
 		if (!this.props) {
-			// @ts-ignore
+			// @ts-ignore In a first render we have full props
 			this.props = props
 
 			return
@@ -47,7 +56,9 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 			nextProps.position.y !== this.props.position.y ||
 			nextProps.size.width !== this.props.size.width ||
 			nextProps.size.height !== this.props.size.height ||
-			nextProps.status !== this.props.status
+			nextProps.status !== this.props.status ||
+			nextProps.ctype.name !== this.props.ctype.name ||
+			nextProps.ctype.value !== this.props.ctype.value
 		);
 	}
 
@@ -66,9 +77,18 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 			this.graphics.buttonMode = true
 		}
 
+		this.graphics.x = this.props.position.x
+		this.graphics.y = this.props.position.y
+
+		if (this.props.ctype.name === WasmCTypeName.Mine) {
+			this.text.text = 'Mine'
+		} else {
+			this.text.text = 'Free'
+		}
+
 		this.graphics.drawRect(
-			this.props.position.x,
-			this.props.position.y,
+			0,
+			0,
 			this.props.size.width,
 			this.props.size.height,
 		)

@@ -25,28 +25,3 @@ pub fn main_js() -> Result<(), JsValue> {
 
     Ok(())
 }
-
-#[wasm_bindgen]
-pub fn hello_world() -> String {
-    "Hello world!".into()
-}
-
-// #[wasm_bindgen]
-// pub fn get_matrix(rows: usize, cols: usize) -> js_sys::Array {
-//     mine_sweeper::matrix_array(rows, cols)
-//         .clone()
-//         .into_iter()
-//         .map(|cell_vec| {
-//             cell_vec
-//                 .clone()
-//                 .into_iter()
-//                 .map(JsValue::from)
-//                 .collect::<js_sys::Array>()
-//         })
-//         .collect()
-// mine_sweeper::just_array(rows)
-//     .clone()
-//     .into_iter()
-//     .map(|vec| JsValue::from(vec))
-//     .collect::<js_sys::Array>()
-// }
