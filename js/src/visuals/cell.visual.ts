@@ -26,11 +26,18 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 		wordWrapWidth: 50,
 		align: 'center',
 	})
+	private readonly sprite: PIXI.Sprite
 
 	constructor(id: number) {
 		this.id = id;
 
+		this.sprite = PIXI.Sprite.from('assets/minesweeper_05.png')
+		// this.sprite = new PIXI.Sprite(texture)
+		// this.sprite.width = 100
+		// this.sprite.height = 100
+
 		this.graphics.addChild(this.text)
+		this.graphics.addChild(this.sprite)
 	}
 
 	public setProps(props: Partial<ICellVisualProps>): void {
@@ -81,9 +88,12 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 		this.graphics.y = this.props.position.y
 
 		if (this.props.ctype.name === WasmCTypeName.Mine) {
-			this.text.text = 'Mine'
+			// const texture = PIXI.Texture.from('../assets/minesweeper_05.png')
+			// this.sprite.texture = texture
+
+			this.text.text = `Mine: ${this.props.ctype.value}`
 		} else {
-			this.text.text = 'Free'
+			this.text.text = `Free: ${this.props.ctype.value}`
 		}
 
 		this.graphics.drawRect(

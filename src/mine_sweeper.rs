@@ -97,7 +97,10 @@ impl MineSweeperEngine {
                     CellType::Mine => WasmCTypeName::Mine,
                     CellType::Empty(_) => WasmCTypeName::Empty,
                 },
-                value: 0,
+                value: match cell.ctype {
+                    CellType::Mine => 0,
+                    CellType::Empty(value) => value,
+                },
             },
         };
 

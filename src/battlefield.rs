@@ -18,6 +18,10 @@ pub enum CellType {
     Empty(u8),
 }
 
+/// First argument represents `col`
+/// Second argument represents `row`
+type Position = (usize, usize);
+
 #[wasm_bindgen]
 #[derive(Copy, Clone)]
 pub enum CellStatus {
@@ -47,27 +51,38 @@ pub struct BattleField {
 }
 
 impl BattleField {
-    pub fn new(rows: usize, cols: usize, _bombs: u16) -> Self {
+    /// Creates an empty battlefield map with
+    ///  no mines and without any text messages
+    ///
+    /// Notes
+    ///  But it should place bombs and text messages recording to the bombs
+    pub fn new(rows: usize, cols: usize, bombs: u16) -> Self {
         let mut map = Vec::with_capacity(rows);
         let mut unique_id = 0;
         let mut rng = rand::thread_rng();
 
-        let random_bomb_row = rng.gen_range(0..rows);
-        let random_bomb_col = rng.gen_range(0..cols);
+        let mut random_bombs = Vec::<Position>::with_capacity(bombs as usize);
+        for _ in 0..bombs {
+            let random_bomb_row = rng.gen_range(0..rows);
+            let random_bomb_col = rng.gen_range(0..cols);
 
-        for i in 0..rows {
+            random_bombs.push((random_bomb_col, random_bomb_row));
+        }
+
+        for row_index in 0..rows {
             map.push(Vec::with_capacity(cols));
 
-            for j in 0..cols {
-                // Place the bomb in random place
-                let ctype = if i == random_bomb_row && j == random_bomb_col {
-                    CellType::Mine
-                } else {
-                    // Create random value for each cell
-                    CellType::Empty(rng.gen_range(0..8))
-                };
+            for col_index in 0..cols {
+                // todo: We should place a bomb in a right place
 
-                map[i].push(Cell {
+                let mut ctype = CellType::Empty(rng.gen_range(0..8));
+                for k in random_bombs.iter() {
+                    if k.1 == row_index && k.0 == col_index {
+                        ctype = CellType::Mine;
+                    }
+                }
+
+                map[row_index].push(Cell {
                     id: unique_id,
                     ctype,
                     status: CellStatus::Hidden,

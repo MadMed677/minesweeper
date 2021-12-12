@@ -6,39 +6,50 @@ const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 const dist = path.resolve(__dirname, "dist");
 
 module.exports = {
-  mode: "production",
-  entry: {
-    index: "./js/bootstrap"
-  },
-  resolve: {
-    extensions: ['.ts', '.js']
-  },
-  output: {
-    path: dist,
-    filename: "[name].js"
-  },
-  devServer: {
-    contentBase: dist,
-  },
-  module: {
-    rules: [
-      {
-        test: /\.ts?/,
-        loader: 'ts-loader'
-      }
+    mode: "production",
+    entry: {
+        index: "./js/bootstrap"
+    },
+    resolve: {
+        extensions: ['.ts', '.js']
+    },
+    output: {
+        path: dist,
+        filename: "[name].js"
+    },
+    devServer: {
+        contentBase: dist,
+    },
+    module: {
+        rules: [
+            {
+                test: /\.ts?/,
+                loader: 'ts-loader'
+            },
+            {
+                test: /\.(png|jpg|gif)$/i,
+                use: [
+                    {
+                        loader: 'url-loader',
+                        options: {
+                            limit: 8192,
+                        },
+                    },
+                ],
+            },
+        ]
+    },
+    plugins: [
+        new CopyPlugin([
+            path.resolve(__dirname, "static")
+        ]),
+
+        new WasmPackPlugin({
+            crateDirectory: __dirname,
+        }),
+
+        new webpack.ProvidePlugin({
+            PIXI: 'pixi.js',
+        }),
     ]
-  },
-  plugins: [
-    new CopyPlugin([
-      path.resolve(__dirname, "static")
-    ]),
-
-    new WasmPackPlugin({
-      crateDirectory: __dirname,
-    }),
-
-    new webpack.ProvidePlugin({
-      PIXI: 'pixi.js',
-    }),
-  ]
 };
