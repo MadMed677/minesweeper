@@ -19,13 +19,7 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 	private readonly id: number;
 	private props!: ICellVisualProps;
 
-	readonly graphics = new PIXI.Graphics()
-	private readonly text = new PIXI.Text('', {
-		fontSize: 16,
-		wordWrap: true,
-		wordWrapWidth: 50,
-		align: 'center',
-	})
+	readonly graphics = new PIXI.Container()
 	private readonly sprite: PIXI.Sprite
 
 	constructor(id: number) {
@@ -34,7 +28,6 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 		/** Create an Sprite with empty texture */
 		this.sprite = new PIXI.Sprite()
 
-		this.graphics.addChild(this.text)
 		this.graphics.addChild(this.sprite)
 	}
 
@@ -68,11 +61,7 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 	}
 
 	public render(): void {
-		this.graphics.clear();
-
 		if (this.props.status === CellStatus.Uncovered) {
-			this.graphics.beginFill(PIXI.utils.string2hex('#D5F5E3'))
-
 			this.graphics.interactive = false
 			this.graphics.buttonMode = false
 
@@ -83,8 +72,6 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 			}
 
 		} else if (this.props.status === CellStatus.Hidden) {
-			this.graphics.beginFill(PIXI.utils.string2hex('#FCF3CF'))
-
 			this.graphics.interactive = true
 			this.graphics.buttonMode = true
 
@@ -96,15 +83,6 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 
 		this.sprite.width = this.props.size.width
 		this.sprite.height = this.props.size.height
-
-		this.graphics.drawRect(
-			0,
-			0,
-			this.props.size.width,
-			this.props.size.height,
-		)
-
-		this.graphics.endFill()
 
 		this.graphics.name = String(this.id)
 	}
