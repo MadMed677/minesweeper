@@ -31,10 +31,8 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 	constructor(id: number) {
 		this.id = id;
 
-		this.sprite = PIXI.Sprite.from('assets/minesweeper_05.png')
-		// this.sprite = new PIXI.Sprite(texture)
-		// this.sprite.width = 100
-		// this.sprite.height = 100
+		/** Create an Sprite with empty texture */
+		this.sprite = new PIXI.Sprite()
 
 		this.graphics.addChild(this.text)
 		this.graphics.addChild(this.sprite)
@@ -77,24 +75,27 @@ export class CellVisual implements IVisual<ICellVisualProps> {
 
 			this.graphics.interactive = false
 			this.graphics.buttonMode = false
+
+			if (this.props.ctype.name === WasmCTypeName.Mine) {
+				this.sprite.texture = PIXI.Texture.from('bomb')
+			} else {
+				this.sprite.texture = PIXI.Texture.from('empty_selected')
+			}
+
 		} else if (this.props.status === CellStatus.Hidden) {
 			this.graphics.beginFill(PIXI.utils.string2hex('#FCF3CF'))
 
 			this.graphics.interactive = true
 			this.graphics.buttonMode = true
+
+			this.sprite.texture = PIXI.Texture.from('empty_not_selected')
 		}
 
 		this.graphics.x = this.props.position.x
 		this.graphics.y = this.props.position.y
 
-		if (this.props.ctype.name === WasmCTypeName.Mine) {
-			// const texture = PIXI.Texture.from('../assets/minesweeper_05.png')
-			// this.sprite.texture = texture
-
-			this.text.text = `Mine: ${this.props.ctype.value}`
-		} else {
-			this.text.text = `Free: ${this.props.ctype.value}`
-		}
+		this.sprite.width = this.props.size.width
+		this.sprite.height = this.props.size.height
 
 		this.graphics.drawRect(
 			0,

@@ -22,6 +22,29 @@ export class Application {
 		backgroundColor: 2174781,
 	})
 
+	/**
+	 * Load all textures and executes `callback` when all textures
+	 *  being loaded
+	 *
+	 * @private
+	 */
+	private loadAllTextures(callback: () => void): void {
+		PIXI.Loader.shared
+			.add('empty_not_selected', 'assets/minesweeper_00.png')
+			.add('empty_selected', 'assets/minesweeper_01.png')
+			.add('bomb', 'assets/minesweeper_05.png')
+			.add('bomb_exploded', 'assets/minesweeper_06.png')
+			.add('mark_1', 'assets/minesweeper_08.png')
+			.add('mark_2', 'assets/minesweeper_09.png')
+			.add('mark_3', 'assets/minesweeper_10.png')
+			.add('mark_4', 'assets/minesweeper_11.png')
+			.add('mark_5', 'assets/minesweeper_12.png')
+			.add('mark_6', 'assets/minesweeper_13.png')
+			.add('mark_7', 'assets/minesweeper_14.png')
+			.add('mark_8', 'assets/minesweeper_15.png')
+			.load(callback)
+	}
+
 	private readonly minesweeperEngine: MineSweeperEngine
 
 	/**
@@ -41,7 +64,10 @@ export class Application {
 
 		this.minesweeperEngine = MineSweeperEngine.create(12, 9)
 
-		this.generateField(this.minesweeperEngine.getField())
+		/** Load all textures and generate field with visuals */
+		this.loadAllTextures(() => {
+			this.generateField(this.minesweeperEngine.getField())
+		})
 
 		const interactionManager = this.application.renderer.plugins.interaction as PIXI.InteractionManager
 
