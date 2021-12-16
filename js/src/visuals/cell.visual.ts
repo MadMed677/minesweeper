@@ -67,7 +67,13 @@ export class CellVisual implements IVisual<ICellVisualProps> {
             if (this.props.ctype.name === WasmCTypeName.Mine) {
                 this.sprite.texture = PIXI.Texture.from('bomb');
             } else {
-                this.sprite.texture = PIXI.Texture.from('empty_selected');
+                if (this.props.ctype.value > 0) {
+                    this.sprite.texture = PIXI.Texture.from(
+                        `mark_${this.props.ctype.value}`,
+                    );
+                } else {
+                    this.sprite.texture = PIXI.Texture.from('empty_selected');
+                }
             }
         } else if (this.props.status === CellStatus.Hidden) {
             this.graphics.interactive = true;

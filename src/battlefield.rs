@@ -18,9 +18,10 @@ pub enum CellType {
     Empty(u8),
 }
 
-/// First argument represents `col`
-/// Second argument represents `row`
-type Position = (usize, usize);
+struct Position {
+    x: usize,
+    y: usize,
+}
 
 #[wasm_bindgen]
 #[derive(Copy, Clone)]
@@ -57,7 +58,7 @@ impl BattleField {
     /// Notes
     ///  But it should place bombs and text messages recording to the bombs
     pub fn new(rows: usize, cols: usize, bombs: u16) -> Self {
-        let mut map = Vec::with_capacity(rows);
+        let mut battlefield_map = Vec::with_capacity(rows);
         let mut unique_id = 0;
         let mut rng = rand::thread_rng();
 
@@ -66,23 +67,24 @@ impl BattleField {
             let random_bomb_row = rng.gen_range(0..rows);
             let random_bomb_col = rng.gen_range(0..cols);
 
-            random_bombs.push((random_bomb_col, random_bomb_row));
+            random_bombs.push(Position {
+                x: random_bomb_col,
+                y: random_bomb_row,
+            });
         }
 
         for row_index in 0..rows {
-            map.push(Vec::with_capacity(cols));
+            battlefield_map.push(Vec::with_capacity(cols));
 
             for col_index in 0..cols {
-                // todo: We should place a bomb in a right place
-
                 let mut ctype = CellType::Empty(rng.gen_range(0..8));
-                for k in random_bombs.iter() {
-                    if k.1 == row_index && k.0 == col_index {
+                for bomb_position in random_bombs.iter() {
+                    if bomb_position.y == row_index && bomb_position.x == col_index {
                         ctype = CellType::Mine;
                     }
                 }
 
-                map[row_index].push(Cell {
+                battlefield_map[row_index].push(Cell {
                     id: unique_id,
                     ctype,
                     status: CellStatus::Hidden,
@@ -92,7 +94,9 @@ impl BattleField {
             }
         }
 
-        Self { map }
+        Self {
+            map: battlefield_map,
+        }
     }
 
     /// Returns a link to the cell by provided `id`
