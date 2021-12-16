@@ -3,17 +3,27 @@
   "name": "rust-webpack-template",
   "version": "0.1.0",
   "scripts": {
-    "build": "rimraf dist pkg && webpack",
     "start": "rimraf dist pkg && webpack-dev-server --open -d",
-    "test": "cargo test && wasm-pack test --headless"
+    "build": "rimraf dist pkg && webpack",
+    "test": "cargo test && wasm-pack test --headless",
+    "lint": "eslint js/src",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@minesweeper/engine": "file:./pkg",
     "pixi.js": "^6.2.0"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.7.0",
+    "@typescript-eslint/parser": "^5.7.0",
     "@wasm-tool/wasm-pack-plugin": "^1.1.0",
     "copy-webpack-plugin": "^5.0.3",
+    "eslint": "^8.4.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "husky": "^7.0.4",
+    "lint-staged": "^12.1.2",
+    "prettier": "2.5.1",
     "rimraf": "^3.0.0",
     "ts-loader": "^8.3.0",
     "typescript": "^4.5.2",
