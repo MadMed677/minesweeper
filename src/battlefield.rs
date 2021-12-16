@@ -18,6 +18,7 @@ pub enum CellType {
     Empty(u8),
 }
 
+#[derive(Copy, Clone, Debug)]
 struct Position {
     x: usize,
     y: usize,
@@ -43,6 +44,8 @@ pub struct Cell {
     pub ctype: CellType,
 
     pub status: CellStatus,
+
+    position: Position,
 }
 
 /// The main map of the battle
@@ -88,6 +91,10 @@ impl BattleField {
                     id: unique_id,
                     ctype,
                     status: CellStatus::Hidden,
+                    position: Position {
+                        x: col_index,
+                        y: row_index,
+                    },
                 });
 
                 unique_id += 1;
@@ -99,7 +106,62 @@ impl BattleField {
         }
     }
 
-    /// Returns a link to the cell by provided `id`
+    /// Find and returns `Cell` by `id` and returns matrix
+    ///  of nearby elements from top-left to bottom-right
+    fn get_matrix_of_nearby_cells(&self, id: CellId) -> Vec<&Cell> {
+        let cell = self.get_by_id(id);
+
+        // Calculate top cells
+        let top_left_cell = self.get_by_position(Position {
+            x: cell.position.x - 1,
+            y: cell.position.y - 1,
+        });
+        let top_middle_cell = self.get_by_position(Position {
+            x: cell.position.x,
+            y: cell.position.y - 1,
+        });
+        let top_right_cell = self.get_by_position(Position {
+            x: cell.position.x + 1,
+            y: cell.position.y - 1,
+        });
+
+        // Calculate center cells
+        let center_left_cell = self.get_by_position(Position {
+            x: cell.position.x - 1,
+            y: cell.position.y,
+        });
+        let center_right_cell = self.get_by_position(Position {
+            x: cell.position.x + 1,
+            y: cell.position.y,
+        });
+
+        // Calculate bottom cells
+        let bottom_left_cell = self.get_by_position(Position {
+            x: cell.position.x - 1,
+            y: cell.position.y + 1,
+        });
+        let bottom_middle_cell = self.get_by_position(Position {
+            x: cell.position.x,
+            y: cell.position.y + 1,
+        });
+        let bottom_right_cell = self.get_by_position(Position {
+            x: cell.position.x + 1,
+            y: cell.position.y + 1,
+        });
+
+        vec![
+            top_left_cell,
+            top_middle_cell,
+            top_right_cell,
+            center_left_cell,
+            center_right_cell,
+            bottom_left_cell,
+            bottom_middle_cell,
+            bottom_right_cell,
+        ]
+    }
+
+    /// Returns a mutable link to the cell by provided `id`
     pub fn get_mut(&mut self, id: CellId) -> &mut Cell {
         for row in &mut self.map {
             for col in row {
@@ -110,6 +172,35 @@ impl BattleField {
         }
 
         panic!("Cell didn't find in battlefield by provided id: {}", id);
+    }
+
+    /// Returns a link to the cell by provided `id`
+    fn get_by_id(&self, id: CellId) -> &Cell {
+        for row in &self.map {
+            for col in row {
+                if col.id == id {
+                    return col;
+                }
+            }
+        }
+
+        panic!("Cell didn't find in battlefield by provided id: {}", id);
+    }
+
+    /// Returns a link to the cell by provided `id`
+    fn get_by_position(&self, position: Position) -> &Cell {
+        for row in &self.map {
+            for cell in row {
+                if cell.position.x == position.x && cell.position.y == position.y {
+                    return cell;
+                }
+            }
+        }
+
+        panic!(
+            "Cell didn't find in battlefield by provided position: {:?}",
+            position
+        );
     }
 
     /// Returns all matrix map
