@@ -93,7 +93,7 @@ impl BattleField {
                 battlefield_map[row_index].push(Cell {
                     id: unique_id,
                     ctype,
-                    status: CellStatus::Hidden,
+                    status: CellStatus::Uncovered,
                     position: Position {
                         x: col_index as i16,
                         y: row_index as i16,
@@ -105,16 +105,15 @@ impl BattleField {
         }
 
         for bomb_position in bombs_map.iter() {
-            let mut nearby_cells =
-                Self::get_matrix_of_nearby_cells(&battlefield_map, bomb_position);
+            Self::get_matrix_of_nearby_cells(&mut battlefield_map, bomb_position);
 
-            for cell in nearby_cells.iter_mut() {
-                let new_type = match cell.ctype {
-                    CellType::Mine => CellType::Mine,
-                    CellType::Empty(count) => CellType::Empty(count + 1),
-                };
-                cell.ctype = new_type;
-            }
+            // for cell in nearby_cells.iter_mut() {
+            //     let new_type = match cell.ctype {
+            //         CellType::Mine => CellType::Mine,
+            //         CellType::Empty(count) => CellType::Empty(count + 1),
+            //     };
+            //     cell.ctype = new_type;
+            // }
         }
 
         Self {
@@ -124,101 +123,27 @@ impl BattleField {
 
     /// Find and returns `Cell` by `id` and returns matrix
     ///  of nearby elements from top-left to bottom-right
-    fn get_matrix_of_nearby_cells<'a>(
-        map: &'a BattlefieldMap,
-        cell_position: &'a Position,
-    ) -> Vec<&'a mut Cell> {
-        let mut result = Vec::<&mut Cell>::new();
+    fn get_matrix_of_nearby_cells<'a>(map: &'a mut BattlefieldMap, cell_position: &'a Position) {
         for row in -1..1 {
             for col in -1..1 {
-                let cell = Self::get_by_position(
+                let option_cell = Self::get_by_position(
                     map,
                     Position {
-                        x: cell_position.x + row,
-                        y: cell_position.y + col,
+                        x: cell_position.x + col,
+                        y: cell_position.y + row,
                     },
                 );
 
-                if let Some(mut c) = cell {
-                    result.push(c);
+                if let Some(cell) = option_cell {
+                    let new_type = match cell.ctype {
+                        CellType::Mine => CellType::Mine,
+                        CellType::Empty(count) => CellType::Empty(count + 1),
+                    };
+
+                    cell.ctype = new_type;
                 }
             }
         }
-
-        result
-
-        // Calculate top cells
-        // let top_left_cell = Self::get_by_position(
-        //     map,
-        //     Position {
-        //         x: cell_position.x - 1,
-        //         y: cell_position.y - 1,
-        //     },
-        // );
-        // let top_middle_cell = Self::get_by_position(
-        //     map,
-        //     Position {
-        //         x: cell_position.x,
-        //         y: cell_position.y - 1,
-        //     },
-        // );
-        // let top_right_cell = Self::get_by_position(
-        //     map,
-        //     Position {
-        //         x: cell_position.x + 1,
-        //         y: cell_position.y - 1,
-        //     },
-        // );
-        //
-        // // Calculate center cells
-        // let center_left_cell = Self::get_by_position(
-        //     map,
-        //     Position {
-        //         x: cell_position.x - 1,
-        //         y: cell_position.y,
-        //     },
-        // );
-        // let center_right_cell = Self::get_by_position(
-        //     map,
-        //     Position {
-        //         x: cell_position.x + 1,
-        //         y: cell_position.y,
-        //     },
-        // );
-        //
-        // // Calculate bottom cells
-        // let bottom_left_cell = Self::get_by_position(
-        //     map,
-        //     Position {
-        //         x: cell_position.x - 1,
-        //         y: cell_position.y + 1,
-        //     },
-        // );
-        // let bottom_middle_cell = Self::get_by_position(
-        //     map,
-        //     Position {
-        //         x: cell_position.x,
-        //         y: cell_position.y + 1,
-        //     },
-        // );
-        // let bottom_right_cell = Self::get_by_position(
-        //     map,
-        //     Position {
-        //         x: cell_position.x + 1,
-        //         y: cell_position.y + 1,
-        //     },
-        // );
-        //
-        // vec![
-        //     top_left_cell.unwrap(),
-        //     top_middle_cell.unwrap(),
-        //     top_right_cell.unwrap(),
-        //     center_left_cell.unwrap(),
-        //     center_right_cell.unwrap(),
-        //     bottom_left_cell.unwrap(),
-        //     bottom_middle_cell.unwrap(),
-        //     bottom_right_cell.unwrap(),
-        // ]
     }
 
     /// Returns a mutable link to the cell by provided `id`
@@ -248,9 +173,9 @@ impl BattleField {
     }
 
     /// Returns a link to the cell by provided `id`
-    fn get_by_position(map: &BattlefieldMap, position: Position) -> Option<&Cell> {
-        if let Some(item) = map.get(position.y as usize) {
-            if let Some(val) = item.get(position.x as usize) {
+    fn get_by_position(map: &mut BattlefieldMap, position: Position) -> Option<&mut Cell> {
+        if let Some(item) = map.get_mut(position.y as usize) {
+            if let Some(mut val) = item.get_mut(position.x as usize) {
                 Some(val)
             } else {
                 None
@@ -275,8 +200,8 @@ mod battlefield_test {
 
     #[test]
     fn should_return_cell_by_specify_position() {
-        let battlefield = BattleField::new(10, 10, 0);
-        let cell = BattleField::get_by_position(&battlefield.map, Position { x: 5, y: 5 });
+        let mut battlefield = BattleField::new(10, 10, 0);
+        let cell = BattleField::get_by_position(&mut battlefield.map, Position { x: 5, y: 5 });
 
         if let Some(c) = cell {
             println!("Should be here!");
@@ -294,8 +219,8 @@ mod battlefield_test {
 
     #[test]
     fn should_not_return_cell_by_specify_position_because_it_is_out_of_bounce() {
-        let battlefield = BattleField::new(10, 10, 0);
-        let cell = BattleField::get_by_position(&battlefield.map, Position { x: -1, y: -1 });
+        let mut battlefield = BattleField::new(10, 10, 0);
+        let cell = BattleField::get_by_position(&mut battlefield.map, Position { x: -1, y: -1 });
 
         if let Some(_) = cell {
             panic!("Cell mustn't be Some in that particular scenario");
