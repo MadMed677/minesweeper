@@ -20,9 +20,9 @@ pub enum CellType {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-struct Position {
-    x: i16,
-    y: i16,
+pub struct Position {
+    pub x: i16,
+    pub y: i16,
 }
 
 #[wasm_bindgen]
@@ -46,9 +46,12 @@ pub struct Cell {
 
     pub status: CellStatus,
 
-    position: Position,
+    pub position: Position,
 }
 
+/// Battlefield map represents the field
+///  when the first vector is a `x` axis or `cols`
+///  and the second vector is a `y` axis or `rows`
 type BattlefieldMap = Vec<Vec<Cell>>;
 
 /// The main map of the battle
@@ -64,14 +67,14 @@ impl BattleField {
     /// Notes
     ///  But it should place bombs and text messages recording to the bombs
     pub fn new(rows: usize, cols: usize, bombs: u16) -> Self {
-        let mut battlefield_map = Vec::with_capacity(rows);
+        let mut battlefield_map = Vec::with_capacity(cols);
         let mut unique_id = 0;
         let mut rng = rand::thread_rng();
 
         let mut bombs_map = Vec::<Position>::with_capacity(bombs as usize);
         for _ in 0..bombs {
-            let random_bomb_row = rng.gen_range(0..rows);
             let random_bomb_col = rng.gen_range(0..cols);
+            let random_bomb_row = rng.gen_range(0..rows);
 
             bombs_map.push(Position {
                 x: random_bomb_col as i16,
@@ -79,10 +82,10 @@ impl BattleField {
             });
         }
 
-        for row_index in 0..rows {
-            battlefield_map.push(Vec::with_capacity(cols));
+        for col_index in 0..cols {
+            battlefield_map.push(Vec::with_capacity(rows));
 
-            for col_index in 0..cols {
+            for row_index in 0..rows {
                 let mut ctype = CellType::Empty(0);
                 for bomb_position in bombs_map.iter() {
                     if bomb_position.y == row_index as i16 && bomb_position.x == col_index as i16 {
@@ -90,7 +93,7 @@ impl BattleField {
                     }
                 }
 
-                battlefield_map[row_index].push(Cell {
+                battlefield_map[col_index].push(Cell {
                     id: unique_id,
                     ctype,
                     status: CellStatus::Uncovered,
@@ -105,15 +108,7 @@ impl BattleField {
         }
 
         for bomb_position in bombs_map.iter() {
-            Self::get_matrix_of_nearby_cells(&mut battlefield_map, bomb_position);
-
-            // for cell in nearby_cells.iter_mut() {
-            //     let new_type = match cell.ctype {
-            //         CellType::Mine => CellType::Mine,
-            //         CellType::Empty(count) => CellType::Empty(count + 1),
-            //     };
-            //     cell.ctype = new_type;
-            // }
+            Self::update_empty_cells_count(&mut battlefield_map, bomb_position);
         }
 
         Self {
@@ -121,11 +116,11 @@ impl BattleField {
         }
     }
 
-    /// Find and returns `Cell` by `id` and returns matrix
+    /// Find and returns Vec of `Cells` by `position` and returns flood_fill
     ///  of nearby elements from top-left to bottom-right
-    fn get_matrix_of_nearby_cells<'a>(map: &'a mut BattlefieldMap, cell_position: &'a Position) {
-        for row in -1..1 {
-            for col in -1..1 {
+    fn update_empty_cells_count<'a>(map: &'a mut BattlefieldMap, cell_position: &'a Position) {
+        for col in -1..2 {
+            for row in -1..2 {
                 let option_cell = Self::get_by_position(
                     map,
                     Position {
@@ -174,8 +169,8 @@ impl BattleField {
 
     /// Returns a link to the cell by provided `id`
     fn get_by_position(map: &mut BattlefieldMap, position: Position) -> Option<&mut Cell> {
-        if let Some(item) = map.get_mut(position.y as usize) {
-            if let Some(mut val) = item.get_mut(position.x as usize) {
+        if let Some(item) = map.get_mut(position.x as usize) {
+            if let Some(mut val) = item.get_mut(position.y as usize) {
                 Some(val)
             } else {
                 None
@@ -183,9 +178,6 @@ impl BattleField {
         } else {
             None
         }
-        // let cell = map[position.y][position.x];
-
-        // cell
     }
 
     /// Returns all matrix map

@@ -31,22 +31,25 @@ pub struct WasmCell {
     pub id: CellId,
     pub ctype: WasmCType,
     pub status: CellStatus,
+
+    /// We provide `position` only for debugging
+    ///  We have to remove it later
+    pub position: WasmPosition,
+}
+
+#[wasm_bindgen]
+#[derive(Copy, Clone)]
+pub struct WasmPosition {
+    pub x: i16,
+    pub y: i16,
 }
 
 #[wasm_bindgen]
 impl MineSweeperEngine {
     /// Creates the engine and matrix battlefield by providing
     ///  rows and columns
-    pub fn create(rows: Option<u16>, cols: Option<u16>) -> Self {
-        let battle_field_rows = rows.unwrap_or(10);
-        let battle_field_cols = cols.unwrap_or(10);
-        let bombs = 5;
-
-        let battlefield = BattleField::new(
-            battle_field_rows as usize,
-            battle_field_cols as usize,
-            bombs,
-        );
+    pub fn create(rows: u16, cols: u16, bombs: u16) -> Self {
+        let battlefield = BattleField::new(rows as usize, cols as usize, bombs);
 
         Self { battlefield }
     }
@@ -101,6 +104,10 @@ impl MineSweeperEngine {
                     CellType::Mine => 0,
                     CellType::Empty(value) => value,
                 },
+            },
+            position: WasmPosition {
+                x: cell.position.x,
+                y: cell.position.y,
             },
         };
 
