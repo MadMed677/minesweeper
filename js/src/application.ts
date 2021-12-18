@@ -28,7 +28,7 @@ export class Application {
      *
      * @private
      */
-    private loadAllTextures(callback: () => void): void {
+    private static loadAllTextures(callback: () => void): void {
         PIXI.Loader.shared
             .add('empty_not_selected', 'assets/minesweeper_00.png')
             .add('empty_selected', 'assets/minesweeper_01.png')
@@ -62,10 +62,10 @@ export class Application {
 
         document.body.appendChild(this.application.view);
 
-        this.minesweeperEngine = MineSweeperEngine.create(12, 9);
+        this.minesweeperEngine = MineSweeperEngine.create(12, 9, 10);
 
         /** Load all textures and generate field with visuals */
-        this.loadAllTextures(() => {
+        Application.loadAllTextures(() => {
             this.generateField(this.minesweeperEngine.getField());
         });
 
@@ -94,22 +94,27 @@ export class Application {
         });
     }
 
+    /**
+     * Generate and render the battle field
+     *  - First array - number of `cols` (x axis)
+     *  - Second array - number of `rows` (y axis)
+     */
     private generateField(field: Array<Array<WasmCell>>): void {
-        /** Rows number is the same as `field` length */
-        const grows = field.length;
+        /** Cols number is the same as `field` length */
+        const gcols = field.length;
 
         /**
          * Cols number is the same in all rows.
          * Because of that we may take first row and
          *  calculate cols length inside of it
          */
-        const gcols = field[0].length;
+        const grows = field[0].length;
         const padding = 5;
         const itemWidth = (CANVAS_WIDTH - padding) / gcols;
         const itemHeight = (CANVAS_HEIGHT - padding) / grows;
 
-        field.forEach((rows, row_index) => {
-            rows.forEach((cell, col_index) => {
+        field.forEach((rows, col_index) => {
+            rows.forEach((cell, row_index) => {
                 const cellVisual = new CellVisual(cell.id);
                 cellVisual.setProps({
                     position: {
