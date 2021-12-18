@@ -20,19 +20,19 @@ pub enum CellType {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Position {
+struct Position {
     pub x: i16,
     pub y: i16,
 }
 
 #[wasm_bindgen]
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum CellStatus {
+pub enum CellState {
     /// Default cell status
     Hidden,
 
     /// Cell was uncovered
-    Uncovered,
+    Revealed,
 }
 
 /// Cell represent each tile on the board
@@ -44,9 +44,12 @@ pub struct Cell {
     /// Cell type
     pub ctype: CellType,
 
-    pub status: CellStatus,
+    pub state: CellState,
 
-    pub position: Position,
+    /// Cell position
+    ///  `position.x` - represents column
+    ///  `position.y` - represents row
+    position: Position,
 }
 
 /// Battlefield map represents the field
@@ -96,7 +99,7 @@ impl BattleField {
                 battlefield_map[col_index].push(Cell {
                     id: unique_id,
                     ctype,
-                    status: CellStatus::Hidden,
+                    state: CellState::Hidden,
                     position: Position {
                         x: col_index as i16,
                         y: row_index as i16,
@@ -188,7 +191,7 @@ impl BattleField {
 
 #[cfg(test)]
 mod battlefield_test {
-    use crate::battlefield::{BattleField, Cell, CellStatus, CellType, Position};
+    use crate::battlefield::{BattleField, Cell, CellState, CellType, Position};
 
     #[test]
     fn should_return_cell_by_specify_position() {
@@ -202,7 +205,7 @@ mod battlefield_test {
                 Cell {
                     id: 55,
                     position: Position { x: 5, y: 5 },
-                    status: CellStatus::Hidden,
+                    state: CellState::Hidden,
                     ctype: CellType::Empty(0)
                 }
             )

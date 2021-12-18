@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import {WasmCell, CellStatus, MineSweeperEngine} from '@minesweeper/engine';
+import {WasmCell, CellState, MineSweeperEngine} from '@minesweeper/engine';
 
 import {CellVisual, ICellVisualProps} from './visuals/cell.visual';
 import {IVisual} from './visuals/visual.interface';
@@ -89,7 +89,7 @@ export class Application {
                 throw new Error(`Cannot find visual by id: ${entityId}`);
             }
 
-            visual.setProps({status: CellStatus.Uncovered});
+            visual.setProps({status: CellState.Revealed});
             visual.render();
         });
     }

@@ -1,7 +1,6 @@
-use js_sys;
 use wasm_bindgen::prelude::*;
 
-use crate::battlefield::{BattleField, Cell, CellId, CellStatus, CellType};
+use crate::battlefield::{BattleField, Cell, CellId, CellState, CellType};
 
 #[wasm_bindgen]
 /// The main Minesweeper engine which contain
@@ -30,11 +29,7 @@ pub struct WasmCType {
 pub struct WasmCell {
     pub id: CellId,
     pub ctype: WasmCType,
-    pub status: CellStatus,
-
-    /// We provide `position` only for debugging
-    ///  We have to remove it later
-    pub position: WasmPosition,
+    pub status: CellState,
 }
 
 #[wasm_bindgen]
@@ -60,10 +55,10 @@ impl MineSweeperEngine {
 
         match cell.ctype {
             CellType::Mine => {
-                cell.status = CellStatus::Uncovered;
+                cell.state = CellState::Revealed;
             }
             CellType::Empty(_count) => {
-                cell.status = CellStatus::Uncovered;
+                cell.state = CellState::Revealed;
             }
         }
 
@@ -79,7 +74,7 @@ impl MineSweeperEngine {
     pub fn get_field(&self) -> js_sys::Array {
         self.battlefield
             .get_all()
-            .into_iter()
+            .iter()
             .map(|cell_vec| {
                 cell_vec
                     .clone()
@@ -94,7 +89,7 @@ impl MineSweeperEngine {
     fn convert_cell_into_wasm(&self, cell: &Cell) -> JsValue {
         let wasm_cell = WasmCell {
             id: cell.id,
-            status: cell.status,
+            status: cell.state,
             ctype: WasmCType {
                 name: match cell.ctype {
                     CellType::Mine => WasmCTypeName::Mine,
@@ -104,10 +99,6 @@ impl MineSweeperEngine {
                     CellType::Mine => 0,
                     CellType::Empty(value) => value,
                 },
-            },
-            position: WasmPosition {
-                x: cell.position.x,
-                y: cell.position.y,
             },
         };
 
