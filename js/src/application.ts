@@ -75,7 +75,7 @@ export class Application {
         interactionManager.on('pointerup', (e: PIXI.InteractionEvent) => {
             const entityId = Number(e.target?.name);
 
-            if (!entityId) {
+            if (typeof entityId !== 'number') {
                 return;
             }
 

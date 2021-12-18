@@ -96,7 +96,7 @@ impl BattleField {
                 battlefield_map[col_index].push(Cell {
                     id: unique_id,
                     ctype,
-                    status: CellStatus::Uncovered,
+                    status: CellStatus::Hidden,
                     position: Position {
                         x: col_index as i16,
                         y: row_index as i16,
