@@ -81,16 +81,17 @@ export class Application {
 
             const cells: Array<WasmCell> =
                 this.minesweeperEngine.uncover(entityId);
-            console.log('cells: ', cells);
 
-            const visual = this.mapState.get(entityId);
+            cells.forEach(cell => {
+                const visual = this.mapState.get(cell.id);
 
-            if (!visual) {
-                throw new Error(`Cannot find visual by id: ${entityId}`);
-            }
+                if (!visual) {
+                    throw new Error(`Cannot find visual by id: ${entityId}`);
+                }
 
-            visual.setProps({status: CellState.Revealed});
-            visual.render();
+                visual.setProps({status: CellState.Revealed});
+                visual.render();
+            });
         });
     }
 
