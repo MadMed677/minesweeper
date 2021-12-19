@@ -21,17 +21,22 @@ impl BattleField {
     pub fn new(rows: usize, cols: usize, bombs: u16) -> Self {
         let mut battlefield_map = Vec::with_capacity(cols);
         let mut unique_id = 0;
-        let mut rng = rand::thread_rng();
 
+        // Calculates bomb positions in random place on the map
         let mut bombs_map = Vec::<Position>::with_capacity(bombs as usize);
         for _ in 0..bombs {
-            let random_bomb_col = rng.gen_range(0..cols);
-            let random_bomb_row = rng.gen_range(0..rows);
+            let mut bomb_position = Self::get_random_bomb_location(cols, rows);
 
-            bombs_map.push(Position {
-                x: random_bomb_col as i16,
-                y: random_bomb_row as i16,
-            });
+            // If we have the same position which already has
+            //  in `bombs_map` vector we have to re-create bomb location
+            //  to avoid duplications
+            for bomb_pos in bombs_map.iter() {
+                if bomb_pos == &bomb_position {
+                    bomb_position = Self::get_random_bomb_location(cols, rows);
+                }
+            }
+
+            bombs_map.push(bomb_position);
         }
 
         for col_index in 0..cols {
@@ -79,6 +84,19 @@ impl BattleField {
         self.map[0].len() as u16
     }
 
+    /// Generates random bomb location by giving `cols` and `rows`
+    fn get_random_bomb_location(cols: usize, rows: usize) -> Position {
+        let mut rng = rand::thread_rng();
+
+        let random_bomb_col = rng.gen_range(0..cols);
+        let random_bomb_row = rng.gen_range(0..rows);
+
+        Position {
+            x: random_bomb_col as i16,
+            y: random_bomb_row as i16,
+        }
+    }
+
     pub fn reveal(&mut self, cell_id: CellId) -> Vec<Cell> {
         let cell = self.get_mut(cell_id);
         cell.state = CellState::Revealed;
@@ -108,12 +126,6 @@ impl BattleField {
     fn flood_fill(&mut self, cell_position: Position, accumulator: &mut Vec<Cell>) {
         for col in -1..2 {
             for row in -1..2 {
-                // let message1 = format!(
-                //     "cell_position: {} / {}, col/row: {} / {}",
-                //     cell_position.x, cell_position.y, col, row
-                // );
-                // console::log_1(&JsValue::from(message1));
-
                 // Check if we out of bounce
                 let position_x = cell_position.x + col;
                 let position_y = cell_position.y + row;
@@ -219,12 +231,37 @@ mod battlefield_test {
     use crate::engine::{BattleField, Cell, CellState, CellType, Position};
 
     #[test]
+    fn should_create_field_4_by_10() {
+        let battlefield = BattleField::new(10, 4, 0);
+        let field = battlefield.get_all();
+
+        assert_eq!(field.len(), 4);
+        assert_eq!(field[0].len(), 10);
+    }
+
+    #[test]
+    fn field_should_contains_10_bombs() {
+        let battlefield = BattleField::new(10, 10, 10);
+        let field = battlefield.get_all();
+
+        let mut bombs_count = 0;
+        for col in field.iter() {
+            for cell in col {
+                if cell.ctype == CellType::Mine {
+                    bombs_count += 1;
+                }
+            }
+        }
+
+        assert_eq!(bombs_count, 10);
+    }
+
+    #[test]
     fn should_return_cell_by_specify_position() {
         let mut battlefield = BattleField::new(10, 10, 0);
         let cell = BattleField::get_by_position(&mut battlefield.map, Position { x: 5, y: 5 });
 
         if let Some(c) = cell {
-            println!("Should be here!");
             assert_eq!(
                 *c,
                 Cell {

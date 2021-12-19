@@ -60,6 +60,7 @@ export class Application {
     private readonly mapState = new Map<number, IVisual<ICellVisualProps>>();
 
     constructor() {
+        /** Turn on Pixi inspector */
         window.__PIXI_INSPECTOR_GLOBAL_HOOK__ &&
             window.__PIXI_INSPECTOR_GLOBAL_HOOK__.register({
                 PIXI: PIXI,
