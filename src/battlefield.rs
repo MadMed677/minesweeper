@@ -1,56 +1,6 @@
+use crate::cell::*;
 use rand::prelude::*;
-use wasm_bindgen::prelude::*;
 use web_sys::console;
-
-pub type CellId = u32;
-
-/// Should contain 2 structure
-///  1. Factory - to create Minesweeper engine
-///  2. Engine which contain game state and provides
-///      some methods to uncover the cells
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum CellType {
-    /// Cell is a mine
-    Mine,
-
-    /// Cell is empty but it may be next to the bomb
-    ///  if it's not it would contain `0`
-    Empty(u8),
-}
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-struct Position {
-    pub x: i16,
-    pub y: i16,
-}
-
-#[wasm_bindgen]
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum CellState {
-    /// Default cell status
-    Hidden,
-
-    /// Cell was uncovered
-    Revealed,
-}
-
-/// Cell represent each tile on the board
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Cell {
-    /// Cell identificator
-    pub id: CellId,
-
-    /// Cell type
-    pub ctype: CellType,
-
-    pub state: CellState,
-
-    /// Cell position
-    ///  `position.x` - represents column
-    ///  `position.y` - represents row
-    position: Position,
-}
 
 /// Battlefield map represents the field
 ///  when the first vector is a `x` axis or `cols`
@@ -61,9 +11,6 @@ type BattlefieldMap = Vec<Vec<Cell>>;
 pub struct BattleField {
     /// Current map
     map: BattlefieldMap,
-
-    cols: usize,
-    rows: usize,
 }
 
 impl BattleField {
@@ -119,9 +66,18 @@ impl BattleField {
 
         Self {
             map: battlefield_map,
-            rows,
-            cols,
         }
+    }
+
+    /// Returns cols count based on `map`
+    fn cols_count(&self) -> u16 {
+        self.map.len() as u16
+    }
+
+    /// Returns rows count based on `map`
+    /// Assumes that all cells have the same `cols` and `rows`
+    fn rows_count(&self) -> u16 {
+        self.map[0].len() as u16
     }
 
     pub fn reveal(&mut self, cell_id: CellId) -> Vec<Cell> {
@@ -168,8 +124,8 @@ impl BattleField {
                 //  and not more than number of cols and rows
                 let is_position_in_map = position_x >= 0
                     && position_y >= 0
-                    && position_x < self.cols as i16
-                    && position_y < self.rows as i16;
+                    && position_x < self.cols_count() as i16
+                    && position_y < self.rows_count() as i16;
 
                 if is_position_in_map {
                     let x = position_x as usize;

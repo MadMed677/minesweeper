@@ -1,8 +1,8 @@
 import * as PIXI from 'pixi.js';
 import {
-    WasmCell,
-    CellState,
     MineSweeperEngine,
+    WasmCell,
+    WasmCellState,
     WasmCTypeName,
 } from '@minesweeper/engine';
 
@@ -90,7 +90,7 @@ export class Application {
             const convertedCells = cells.map(cell => {
                 return {
                     status:
-                        cell.status === CellState.Revealed
+                        cell.status === WasmCellState.Revealed
                             ? 'revealed'
                             : 'hidden',
                     name:
@@ -109,7 +109,7 @@ export class Application {
                     throw new Error(`Cannot find visual by id: ${cell.id}`);
                 }
 
-                visual.setProps({status: CellState.Revealed});
+                visual.setProps({status: WasmCellState.Revealed});
                 visual.render();
             });
         });

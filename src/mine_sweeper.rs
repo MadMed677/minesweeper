@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 
-use crate::battlefield::{BattleField, Cell, CellId, CellState, CellType};
+use crate::battlefield::BattleField;
+use crate::cell::{Cell, CellId, CellState, CellType};
 
 #[wasm_bindgen]
 /// The main Minesweeper engine which contain
@@ -29,14 +30,14 @@ pub struct WasmCType {
 pub struct WasmCell {
     pub id: CellId,
     pub ctype: WasmCType,
-    pub status: CellState,
+    pub status: WasmCellState,
 }
 
 #[wasm_bindgen]
-#[derive(Copy, Clone)]
-pub struct WasmPosition {
-    pub x: i16,
-    pub y: i16,
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum WasmCellState {
+    Hidden,
+    Revealed,
 }
 
 #[wasm_bindgen]
@@ -52,15 +53,6 @@ impl MineSweeperEngine {
     /// Reveal and mutate the cell by providing id
     pub fn reveal(&mut self, cell_id: CellId) -> js_sys::Array {
         let revealed = self.battlefield.reveal(cell_id);
-        // cell.state = CellState::Revealed;
-        //
-        // match cell.ctype {
-        //     CellType::Mine => {}
-        //     CellType::Empty(0) => {
-        //         // Flood fill algorithm which have to uncover all near cells
-        //     }
-        //     CellType::Empty(_) => {}
-        // }
 
         // Returns a vector of changed cells
         revealed
@@ -89,7 +81,10 @@ impl MineSweeperEngine {
     fn convert_cell_into_wasm(&self, cell: &Cell) -> JsValue {
         let wasm_cell = WasmCell {
             id: cell.id,
-            status: cell.state,
+            status: match cell.state {
+                CellState::Hidden => WasmCellState::Hidden,
+                CellState::Revealed => WasmCellState::Revealed,
+            },
             ctype: WasmCType {
                 name: match cell.ctype {
                     CellType::Mine => WasmCTypeName::Mine,

@@ -1,4 +1,5 @@
 mod battlefield;
+mod cell;
 mod mine_sweeper;
 
 use wasm_bindgen::prelude::*;

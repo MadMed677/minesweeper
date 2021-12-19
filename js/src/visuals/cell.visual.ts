@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import {IVisual} from './visual.interface';
-import {CellState, WasmCType, WasmCTypeName} from '@minesweeper/engine';
+import {WasmCellState, WasmCType, WasmCTypeName} from '@minesweeper/engine';
 
 export interface ICellVisualProps {
     position: {
@@ -11,7 +11,7 @@ export interface ICellVisualProps {
         width: number;
         height: number;
     };
-    status: CellState;
+    status: WasmCellState;
     ctype: WasmCType;
 }
 
@@ -60,7 +60,7 @@ export class CellVisual implements IVisual<ICellVisualProps> {
     }
 
     public render(): void {
-        if (this.props.status === CellState.Revealed) {
+        if (this.props.status === WasmCellState.Revealed) {
             this.graphics.interactive = false;
             this.graphics.buttonMode = false;
 
@@ -75,7 +75,7 @@ export class CellVisual implements IVisual<ICellVisualProps> {
                     this.sprite.texture = PIXI.Texture.from('empty_selected');
                 }
             }
-        } else if (this.props.status === CellState.Hidden) {
+        } else if (this.props.status === WasmCellState.Hidden) {
             this.graphics.interactive = true;
             this.graphics.buttonMode = true;
 
