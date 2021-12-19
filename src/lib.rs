@@ -1,6 +1,5 @@
-mod battlefield;
-mod cell;
-mod mine_sweeper;
+mod engine;
+mod wasm;
 
 use wasm_bindgen::prelude::*;
 use web_sys::console;

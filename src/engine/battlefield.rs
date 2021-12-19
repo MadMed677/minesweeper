@@ -1,6 +1,5 @@
-use crate::cell::*;
+use crate::engine::cell::*;
 use rand::prelude::*;
-use web_sys::console;
 
 /// Battlefield map represents the field
 ///  when the first vector is a `x` axis or `cols`
@@ -217,7 +216,7 @@ impl BattleField {
 
 #[cfg(test)]
 mod battlefield_test {
-    use crate::battlefield::{BattleField, Cell, CellState, CellType, Position};
+    use crate::engine::{BattleField, Cell, CellState, CellType, Position};
 
     #[test]
     fn should_return_cell_by_specify_position() {

@@ -1,4 +1,4 @@
-pub type CellId = u32;
+pub type CellId = u16;
 
 /// Should contain 2 structure
 ///  1. Factory - to create Minesweeper engine

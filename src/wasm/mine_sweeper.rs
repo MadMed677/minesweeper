@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 
-use crate::battlefield::BattleField;
-use crate::cell::{Cell, CellId, CellState, CellType};
+use crate::engine::{BattleField, Cell, CellId, CellState, CellType};
+use crate::wasm::wasm_types::*;
 
 #[wasm_bindgen]
 /// The main Minesweeper engine which contain
@@ -9,35 +9,6 @@ use crate::cell::{Cell, CellId, CellState, CellType};
 ///  - cols
 pub struct MineSweeperEngine {
     battlefield: BattleField,
-}
-
-#[wasm_bindgen]
-#[derive(Copy, Clone)]
-pub enum WasmCTypeName {
-    Mine,
-    Empty,
-}
-
-#[wasm_bindgen]
-#[derive(Copy, Clone)]
-pub struct WasmCType {
-    pub name: WasmCTypeName,
-    pub value: u8,
-}
-
-#[wasm_bindgen]
-#[derive(Copy, Clone)]
-pub struct WasmCell {
-    pub id: CellId,
-    pub ctype: WasmCType,
-    pub status: WasmCellState,
-}
-
-#[wasm_bindgen]
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum WasmCellState {
-    Hidden,
-    Revealed,
 }
 
 #[wasm_bindgen]
@@ -50,7 +21,7 @@ impl MineSweeperEngine {
         Self { battlefield }
     }
 
-    /// Reveal and mutate the cell by providing id
+    /// Reveals the cell by providing id
     pub fn reveal(&mut self, cell_id: CellId) -> js_sys::Array {
         let revealed = self.battlefield.reveal(cell_id);
 
