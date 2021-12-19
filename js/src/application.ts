@@ -1,5 +1,10 @@
 import * as PIXI from 'pixi.js';
-import {WasmCell, CellState, MineSweeperEngine} from '@minesweeper/engine';
+import {
+    WasmCell,
+    CellState,
+    MineSweeperEngine,
+    WasmCTypeName,
+} from '@minesweeper/engine';
 
 import {CellVisual, ICellVisualProps} from './visuals/cell.visual';
 import {IVisual} from './visuals/visual.interface';
@@ -80,13 +85,28 @@ export class Application {
             }
 
             const cells: Array<WasmCell> =
-                this.minesweeperEngine.uncover(entityId);
+                this.minesweeperEngine.reveal(entityId);
+            // console.log('cells: ', cells);
+            const convertedCells = cells.map(cell => {
+                return {
+                    status:
+                        cell.status === CellState.Revealed
+                            ? 'revealed'
+                            : 'hidden',
+                    name:
+                        cell.ctype.name === WasmCTypeName.Mine
+                            ? 'mine'
+                            : 'cell',
+                    value: cell.ctype.value,
+                };
+            });
+            console.log('convertedCells: ', convertedCells);
 
             cells.forEach(cell => {
                 const visual = this.mapState.get(cell.id);
 
                 if (!visual) {
-                    throw new Error(`Cannot find visual by id: ${entityId}`);
+                    throw new Error(`Cannot find visual by id: ${cell.id}`);
                 }
 
                 visual.setProps({status: CellState.Revealed});

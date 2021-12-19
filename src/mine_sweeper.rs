@@ -49,21 +49,21 @@ impl MineSweeperEngine {
         Self { battlefield }
     }
 
-    /// Uncover and mutate the cell by providing id
-    pub fn uncover(&mut self, cell_id: CellId) -> js_sys::Array {
-        let cell = self.battlefield.get_mut(cell_id);
-
-        match cell.ctype {
-            CellType::Mine => {
-                cell.state = CellState::Revealed;
-            }
-            CellType::Empty(_count) => {
-                cell.state = CellState::Revealed;
-            }
-        }
+    /// Reveal and mutate the cell by providing id
+    pub fn reveal(&mut self, cell_id: CellId) -> js_sys::Array {
+        let revealed = self.battlefield.reveal(cell_id);
+        // cell.state = CellState::Revealed;
+        //
+        // match cell.ctype {
+        //     CellType::Mine => {}
+        //     CellType::Empty(0) => {
+        //         // Flood fill algorithm which have to uncover all near cells
+        //     }
+        //     CellType::Empty(_) => {}
+        // }
 
         // Returns a vector of changed cells
-        vec![cell.clone()]
+        revealed
             .into_iter()
             .map(|ref cell| self.convert_cell_into_wasm(cell))
             .collect()

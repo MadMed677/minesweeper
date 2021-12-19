@@ -61,6 +61,9 @@ type BattlefieldMap = Vec<Vec<Cell>>;
 pub struct BattleField {
     /// Current map
     map: BattlefieldMap,
+
+    cols: usize,
+    rows: usize,
 }
 
 impl BattleField {
@@ -116,6 +119,73 @@ impl BattleField {
 
         Self {
             map: battlefield_map,
+            rows,
+            cols,
+        }
+    }
+
+    pub fn reveal(&mut self, cell_id: CellId) -> Vec<Cell> {
+        let cell = self.get_mut(cell_id);
+        cell.state = CellState::Revealed;
+
+        // Create accumulator to save all revealed Cells
+        // let mut accumulator = Vec::new();
+        let mut accumulator = vec![*cell];
+        self.reveal_priv(cell_id, &mut accumulator);
+
+        accumulator
+    }
+
+    fn reveal_priv(&mut self, cell_id: CellId, accumulator: &mut Vec<Cell>) {
+        let cell = self.get_mut(cell_id);
+        cell.state = CellState::Revealed;
+
+        if cell.ctype == CellType::Empty(0) {
+            let position = cell.position;
+
+            // console::log_1(&JsValue::from(
+            //     "Cell type is `0` we should start flood fill algorithm",
+            // ));
+            self.flood_fill(position, accumulator);
+        }
+    }
+
+    fn flood_fill(&mut self, cell_position: Position, accumulator: &mut Vec<Cell>) {
+        for col in -1..2 {
+            for row in -1..2 {
+                // let message1 = format!(
+                //     "cell_position: {} / {}, col/row: {} / {}",
+                //     cell_position.x, cell_position.y, col, row
+                // );
+                // console::log_1(&JsValue::from(message1));
+
+                // Check if we out of bounce
+                let position_x = cell_position.x + col;
+                let position_y = cell_position.y + row;
+
+                // Check if position for current cell inside the map
+                //  not less than 0
+                //  and not more than number of cols and rows
+                let is_position_in_map = position_x >= 0
+                    && position_y >= 0
+                    && position_x < self.cols as i16
+                    && position_y < self.rows as i16;
+
+                if is_position_in_map {
+                    let x = position_x as usize;
+                    let y = position_y as usize;
+
+                    let cell = self.map[x][y];
+
+                    if cell.ctype != CellType::Mine && cell.state != CellState::Revealed {
+                        accumulator.push(cell);
+
+                        // If cell is not a mine, and it's not revealed
+                        // we have to call `reveal` method again
+                        self.reveal_priv(cell.id, accumulator);
+                    }
+                }
+            }
         }
     }
 
@@ -147,9 +217,9 @@ impl BattleField {
     /// Returns a mutable link to the cell by provided `id`
     pub fn get_mut(&mut self, id: CellId) -> &mut Cell {
         for row in &mut self.map {
-            for col in row {
-                if col.id == id {
-                    return col;
+            for cell in row {
+                if cell.id == id {
+                    return cell;
                 }
             }
         }
@@ -173,7 +243,7 @@ impl BattleField {
     /// Returns a link to the cell by provided `id`
     fn get_by_position(map: &mut BattlefieldMap, position: Position) -> Option<&mut Cell> {
         if let Some(item) = map.get_mut(position.x as usize) {
-            if let Some(mut val) = item.get_mut(position.y as usize) {
+            if let Some(val) = item.get_mut(position.y as usize) {
                 Some(val)
             } else {
                 None
