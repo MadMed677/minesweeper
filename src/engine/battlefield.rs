@@ -97,18 +97,25 @@ impl BattleField {
         }
     }
 
+    /// Reveals the cell by provided `id`
+    /// Returns a vector of cells which were revealed
+    ///  based on internal logic when we have to
+    ///  reveal all cells which have `0` value
     pub fn reveal(&mut self, cell_id: CellId) -> Vec<Cell> {
         let cell = self.get_mut(cell_id);
         cell.state = CellState::Revealed;
 
         // Create accumulator to save all revealed Cells
-        // let mut accumulator = Vec::new();
         let mut accumulator = vec![*cell];
         self.reveal_priv(cell_id, &mut accumulator);
 
         accumulator
     }
 
+    /// Reveals the cell and iteratively execute `flood_fill` method
+    ///  to calculate all near cells and reveal them too if
+    ///  they have an `Empty` status and the value of the
+    ///  cell is `0`
     fn reveal_priv(&mut self, cell_id: CellId, accumulator: &mut Vec<Cell>) {
         let cell = self.get_mut(cell_id);
         cell.state = CellState::Revealed;
@@ -116,13 +123,14 @@ impl BattleField {
         if cell.ctype == CellType::Empty(0) {
             let position = cell.position;
 
-            // console::log_1(&JsValue::from(
-            //     "Cell type is `0` we should start flood fill algorithm",
-            // ));
             self.flood_fill(position, accumulator);
         }
     }
 
+    /// Calculates all near cells based on `cell_position` and call
+    ///  `reveal_priv` to reveal these cells if they have `0` value
+    ///
+    /// @see https://en.wikipedia.org/wiki/Flood_fill
     fn flood_fill(&mut self, cell_position: Position, accumulator: &mut Vec<Cell>) {
         for col in -1..2 {
             for row in -1..2 {
@@ -133,12 +141,12 @@ impl BattleField {
                 // Check if position for current cell inside the map
                 //  not less than 0
                 //  and not more than number of cols and rows
-                let is_position_in_map = position_x >= 0
+                let is_position_inside_map = position_x >= 0
                     && position_y >= 0
                     && position_x < self.cols_count() as i16
                     && position_y < self.rows_count() as i16;
 
-                if is_position_in_map {
+                if is_position_inside_map {
                     let x = position_x as usize;
                     let y = position_y as usize;
 
@@ -187,19 +195,6 @@ impl BattleField {
             for cell in row {
                 if cell.id == id {
                     return cell;
-                }
-            }
-        }
-
-        panic!("Cell didn't find in battlefield by provided id: {}", id);
-    }
-
-    /// Returns a link to the cell by provided `id`
-    fn get_by_id(map: &BattlefieldMap, id: CellId) -> &Cell {
-        for row in map {
-            for col in row {
-                if col.id == id {
-                    return col;
                 }
             }
         }
@@ -279,7 +274,7 @@ mod battlefield_test {
         let mut battlefield = BattleField::new(10, 10, 0);
         let cell = BattleField::get_by_position(&mut battlefield.map, Position { x: -1, y: -1 });
 
-        if let Some(_) = cell {
+        if cell.is_some() {
             panic!("Cell mustn't be Some in that particular scenario");
         } else {
             assert_eq!(cell.is_none(), true);
