@@ -1,24 +1,43 @@
-## How to install
+# MineSweeper Game
+Minesweeper is a single-player puzzle video game.
+The objective of the game is to clear a rectangular board
+containing hidden "mines" or bombs without detonating any of them,
+with help from clues about the number of neighbouring mines
+in each field.
 
-```sh
-npm install
-```
+The game originates from the 1960s, and it has been written
+for many computing platforms in use today.
 
-## How to run in debug mode
+[More information about the game](https://en.wikipedia.org/wiki/Minesweeper_(video_game))
 
-```sh
+## Technologies
+Minesweeper was written on Rust and Typescript
+
+### Rust
+Rust contains the main logic of the game:
+- Contains the main `map` (or `battlefield` inside the code)
+    with provided `cols`, `rows` and provided `bombs`
+- Contains the logic to reveal specific cell
+
+### Typescript
+- Contains only render part of the game. It uses `PixiJS` to render
+    Canvas with WebGL and visualize board game based on Rust engine
+
+## Develop
+### How to run in debug mode
+```shell
 # Builds the project and opens it in a new browser tab. Auto-reloads when the project changes.
 npm start
 ```
 
-## How to build in release mode
+### How to build in release mode
 
 ```sh
 # Builds the project and places it into the `dist` folder.
 npm run build
 ```
 
-## How to run unit tests
+### How to run unit tests
 
 ```sh
 # Runs tests in Firefox
@@ -30,19 +49,3 @@ npm test -- --chrome
 # Runs tests in Safari
 npm test -- --safari
 ```
-
-## What does each file do?
-
-* `Cargo.toml` contains the standard Rust metadata. You put your Rust dependencies in here. You must change this file with your details (name, description, version, authors, categories)
-
-* `package.json` contains the standard npm metadata. You put your JavaScript dependencies in here. You must change this file with your details (author, name, version)
-
-* `webpack.config.js` contains the Webpack configuration. You shouldn't need to change this, unless you have very special needs.
-
-* The `js` folder contains your JavaScript code (`index.js` is used to hook everything into Webpack, you don't need to change it).
-
-* The `src` folder contains your Rust code.
-
-* The `static` folder contains any files that you want copied as-is into the final build. It contains an `index.html` file which loads the `index.js` file.
-
-* The `tests` folder contains your Rust unit tests.

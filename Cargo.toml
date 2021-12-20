@@ -3,8 +3,8 @@
 name = "minesweeper_engine"
 description = "Rust Minesweeper engine"
 version = "0.1.0"
-authors = ["You <you@example.com>"]
-categories = ["wasm"]
+authors = ["Artem Anashev <madmed677@gmail.com>"]
+categories = ["wasm", "game", "js", "ts", "typescript", "pixi", "pixi.js"]
 readme = "README.md"
 edition = "2018"
 
