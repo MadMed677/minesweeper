@@ -1,10 +1,5 @@
 import * as PIXI from 'pixi.js';
-import {
-    MineSweeperEngine,
-    WasmCell,
-    WasmCellState,
-    WasmCTypeName,
-} from '@minesweeper/engine';
+import {MineSweeperEngine, WasmCell, WasmCellState} from '@minesweeper/engine';
 
 import {CellVisual, ICellVisualProps} from './visuals/cell.visual';
 import {IVisual} from './visuals/visual.interface';
@@ -20,7 +15,7 @@ declare global {
     }
 }
 
-export class Application {
+export class MinesweeperClientApplication {
     private readonly application = new PIXI.Application({
         width: CANVAS_WIDTH,
         height: CANVAS_HEIGHT,
@@ -33,24 +28,29 @@ export class Application {
      *
      * @private
      */
-    private static loadAllTextures(callback: () => void): void {
-        PIXI.Loader.shared
-            .add('empty_not_selected', 'assets/minesweeper_00.png')
-            .add('empty_selected', 'assets/minesweeper_01.png')
-            .add('bomb', 'assets/minesweeper_05.png')
-            .add('bomb_exploded', 'assets/minesweeper_06.png')
-            .add('mark_1', 'assets/minesweeper_08.png')
-            .add('mark_2', 'assets/minesweeper_09.png')
-            .add('mark_3', 'assets/minesweeper_10.png')
-            .add('mark_4', 'assets/minesweeper_11.png')
-            .add('mark_5', 'assets/minesweeper_12.png')
-            .add('mark_6', 'assets/minesweeper_13.png')
-            .add('mark_7', 'assets/minesweeper_14.png')
-            .add('mark_8', 'assets/minesweeper_15.png')
-            .load(callback);
+    private static loadAllTextures(): Promise<void> {
+        return new Promise<void>(resolve => {
+            PIXI.Loader.shared
+                .add('empty_not_selected', 'assets/minesweeper_00.png')
+                .add('empty_selected', 'assets/minesweeper_01.png')
+                .add('bomb', 'assets/minesweeper_05.png')
+                .add('bomb_exploded', 'assets/minesweeper_06.png')
+                .add('mark_1', 'assets/minesweeper_08.png')
+                .add('mark_2', 'assets/minesweeper_09.png')
+                .add('mark_3', 'assets/minesweeper_10.png')
+                .add('mark_4', 'assets/minesweeper_11.png')
+                .add('mark_5', 'assets/minesweeper_12.png')
+                .add('mark_6', 'assets/minesweeper_13.png')
+                .add('mark_7', 'assets/minesweeper_14.png')
+                .add('mark_8', 'assets/minesweeper_15.png')
+                .load(() => {
+                    resolve();
+                });
+        });
     }
 
-    private readonly minesweeperEngine: MineSweeperEngine;
+    private minesweeperEngine!: MineSweeperEngine;
+    private readonly interactionManager: PIXI.InteractionManager;
 
     /**
      * Contains a map of cell
@@ -68,17 +68,18 @@ export class Application {
 
         document.body.appendChild(this.application.view);
 
-        this.minesweeperEngine = MineSweeperEngine.create(12, 9, 10);
-
-        /** Load all textures and generate field with visuals */
-        Application.loadAllTextures(() => {
-            this.generateField(this.minesweeperEngine.getField());
-        });
-
-        const interactionManager = this.application.renderer.plugins
+        this.interactionManager = this.application.renderer.plugins
             .interaction as PIXI.InteractionManager;
+    }
 
-        interactionManager.on('pointerup', (e: PIXI.InteractionEvent) => {
+    public async createBattlefield(rows: number, cols: number, bombs: number) {
+        /** Load all textures and generate field with visuals */
+        await MinesweeperClientApplication.loadAllTextures();
+
+        this.minesweeperEngine = MineSweeperEngine.create(rows, cols, bombs);
+        this.generateField(this.minesweeperEngine.getField());
+
+        this.interactionManager.on('pointerup', (e: PIXI.InteractionEvent) => {
             const entityId = Number(e.target?.name);
 
             if (typeof entityId !== 'number') {
@@ -87,21 +88,6 @@ export class Application {
 
             const cells: Array<WasmCell> =
                 this.minesweeperEngine.reveal(entityId);
-            // console.log('cells: ', cells);
-            const convertedCells = cells.map(cell => {
-                return {
-                    status:
-                        cell.status === WasmCellState.Revealed
-                            ? 'revealed'
-                            : 'hidden',
-                    name:
-                        cell.ctype.name === WasmCTypeName.Mine
-                            ? 'mine'
-                            : 'cell',
-                    value: cell.ctype.value,
-                };
-            });
-            console.log('convertedCells: ', convertedCells);
 
             cells.forEach(cell => {
                 const visual = this.mapState.get(cell.id);

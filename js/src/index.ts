@@ -1,3 +1,4 @@
-import {Application} from './application';
+import {MinesweeperClientApplication} from './MinesweeperClientApplication';
 
-new Application();
+const minesweeperClientApplication = new MinesweeperClientApplication();
+minesweeperClientApplication.createBattlefield(12, 9, 10);
