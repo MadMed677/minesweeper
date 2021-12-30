@@ -4,8 +4,11 @@ import {MineSweeperEngine, WasmCell, WasmCellState} from '@minesweeper/engine';
 import {CellVisual, ICellVisualProps} from './visuals/cell.visual';
 import {IVisual} from './visuals/visual.interface';
 
-const CANVAS_WIDTH = 1000;
-const CANVAS_HEIGHT = 1000;
+const DEFAULT_CANVAS_WIDTH = 1000;
+const DEFAULT_CANVAS_HEIGHT = 1000;
+
+/** Size of the column (width or height) in pixels */
+const COLUMN_SIZE = 40;
 
 declare global {
     interface Window {
@@ -17,8 +20,8 @@ declare global {
 
 export class MinesweeperClientApplication {
     private readonly application = new PIXI.Application({
-        width: CANVAS_WIDTH,
-        height: CANVAS_HEIGHT,
+        width: DEFAULT_CANVAS_WIDTH,
+        height: DEFAULT_CANVAS_HEIGHT,
         backgroundColor: 2174781,
     });
 
@@ -72,7 +75,12 @@ export class MinesweeperClientApplication {
             .interaction as PIXI.InteractionManager;
     }
 
+    /** Creates a canvas for the battlefield */
     public async createBattlefield(rows: number, cols: number, bombs: number) {
+        /** Updates application by specific column sizes */
+        this.application.view.width = COLUMN_SIZE * cols;
+        this.application.view.height = COLUMN_SIZE * rows;
+
         /** Load all textures and generate field with visuals */
         await MinesweeperClientApplication.loadAllTextures();
 
@@ -108,30 +116,17 @@ export class MinesweeperClientApplication {
      *  - Second array - number of `rows` (y axis)
      */
     private generateField(field: Array<Array<WasmCell>>): void {
-        /** Cols number is the same as `field` length */
-        const gcols = field.length;
-
-        /**
-         * Cols number is the same in all rows.
-         * Because of that we may take first row and
-         *  calculate cols length inside of it
-         */
-        const grows = field[0].length;
-        const padding = 5;
-        const itemWidth = (CANVAS_WIDTH - padding) / gcols;
-        const itemHeight = (CANVAS_HEIGHT - padding) / grows;
-
         field.forEach((rows, col_index) => {
             rows.forEach((cell, row_index) => {
                 const cellVisual = new CellVisual(cell.id);
                 cellVisual.setProps({
                     position: {
-                        x: col_index * itemWidth + padding,
-                        y: row_index * itemHeight + padding,
+                        x: col_index * COLUMN_SIZE,
+                        y: row_index * COLUMN_SIZE,
                     },
                     size: {
-                        width: itemWidth - padding,
-                        height: itemHeight - padding,
+                        width: COLUMN_SIZE,
+                        height: COLUMN_SIZE,
                     },
                     status: cell.status,
                     ctype: cell.ctype,
