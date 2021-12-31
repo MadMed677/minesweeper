@@ -106,8 +106,9 @@ impl BattleField {
         cell.state = CellState::Revealed;
 
         // Create accumulator to save all revealed Cells
+        //  as a first parameter set current `cell` as a first argument
         let mut accumulator = vec![*cell];
-        self.reveal_priv(cell_id, &mut accumulator);
+        self.reveal_recursively(cell_id, &mut accumulator);
 
         accumulator
     }
@@ -116,7 +117,7 @@ impl BattleField {
     ///  to calculate all near cells and reveal them too if
     ///  they have an `Empty` status and the value of the
     ///  cell is `0`
-    fn reveal_priv(&mut self, cell_id: CellId, accumulator: &mut Vec<Cell>) {
+    fn reveal_recursively(&mut self, cell_id: CellId, accumulator: &mut Vec<Cell>) {
         let cell = self.get_mut(cell_id);
         cell.state = CellState::Revealed;
 
@@ -157,7 +158,7 @@ impl BattleField {
 
                         // If cell is not a mine, and it's not revealed
                         // we have to call `reveal` method again
-                        self.reveal_priv(cell.id, accumulator);
+                        self.reveal_recursively(cell.id, accumulator);
                     }
                 }
             }
