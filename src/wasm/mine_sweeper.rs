@@ -23,10 +23,11 @@ impl MineSweeperEngine {
 
     /// Reveals the cell by providing id
     pub fn reveal(&mut self, cell_id: CellId) -> js_sys::Array {
-        let revealed = self.battlefield.reveal(cell_id);
+        let reveal = self.battlefield.reveal(cell_id);
 
         // Returns a vector of changed cells
-        revealed
+        reveal
+            .cells
             .into_iter()
             .map(|ref cell| self.convert_cell_into_wasm(cell))
             .collect()

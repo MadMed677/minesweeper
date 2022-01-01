@@ -12,6 +12,11 @@ pub struct BattleField {
     map: BattlefieldMap,
 }
 
+pub struct Reveal {
+    pub game_is_over: bool,
+    pub cells: Vec<Cell>,
+}
+
 impl BattleField {
     /// Creates an empty battlefield map with
     ///  no mines and without any text messages
@@ -101,7 +106,7 @@ impl BattleField {
     /// Returns a vector of cells which were revealed
     ///  based on internal logic when we have to
     ///  reveal all cells which have `0` value
-    pub fn reveal(&mut self, cell_id: CellId) -> Vec<Cell> {
+    pub fn reveal(&mut self, cell_id: CellId) -> Reveal {
         let cell = self.get_mut(cell_id);
         cell.state = CellState::Revealed;
 
@@ -110,7 +115,10 @@ impl BattleField {
         let mut accumulator = vec![*cell];
         self.reveal_recursively(cell_id, &mut accumulator);
 
-        accumulator
+        Reveal {
+            game_is_over: false,
+            cells: accumulator,
+        }
     }
 
     /// Reveals the cell and iteratively execute `flood_fill` method
