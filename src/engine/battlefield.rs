@@ -115,9 +115,18 @@ impl BattleField {
         let mut accumulator = vec![*cell];
         self.reveal_recursively(cell_id, &mut accumulator);
 
-        Reveal {
-            game_is_over: false,
-            cells: accumulator,
+        let option_bomb = accumulator.iter().find(|cell| cell.ctype == CellType::Mine);
+
+        if option_bomb.is_some() {
+            Reveal {
+                game_is_over: true,
+                cells: accumulator,
+            }
+        } else {
+            Reveal {
+                game_is_over: false,
+                cells: accumulator,
+            }
         }
     }
 

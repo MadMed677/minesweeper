@@ -30,3 +30,11 @@ pub enum WasmCellState {
     Hidden,
     Revealed,
 }
+
+// #[wasm_bindgen]
+// #[derive(Copy, Clone, Debug)]
+pub struct WasmReveal {
+    pub game_is_over: bool,
+    pub cells: js_sys::ArrayBuffer,
+    // pub cells: Vec<WasmCell>,
+}

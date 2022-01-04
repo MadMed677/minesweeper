@@ -26,11 +26,13 @@ impl MineSweeperEngine {
         let reveal = self.battlefield.reveal(cell_id);
 
         // Returns a vector of changed cells
-        reveal
+        let cells = reveal
             .cells
             .into_iter()
             .map(|ref cell| self.convert_cell_into_wasm(cell))
-            .collect()
+            .collect();
+
+        cells
     }
 
     /// Returns map to the client
