@@ -117,10 +117,22 @@ impl BattleField {
 
         let option_bomb = accumulator.iter().find(|cell| cell.ctype == CellType::Mine);
 
+        // If we found a bomb we have to move through all
+        //  cells, reveal it and return the actual data into
+        //  the client
         if option_bomb.is_some() {
+            let mut result = Vec::new();
+            for col in self.map.iter_mut() {
+                for cell in col {
+                    // Update cell state
+                    cell.state = CellState::Revealed;
+                    result.push(*cell);
+                }
+            }
+
             Reveal {
                 game_is_over: true,
-                cells: accumulator,
+                cells: result,
             }
         } else {
             Reveal {

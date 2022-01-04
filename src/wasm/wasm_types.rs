@@ -17,7 +17,6 @@ pub struct WasmCType {
 }
 
 #[wasm_bindgen]
-#[derive(Copy, Clone)]
 pub struct WasmCell {
     pub id: CellId,
     pub ctype: WasmCType,

@@ -4,11 +4,29 @@ use crate::engine::{BattleField, Cell, CellId, CellState, CellType};
 use crate::wasm::wasm_types::*;
 
 #[wasm_bindgen]
+#[derive(Copy, Clone)]
+pub enum GameState {
+    /// Signals to the player that the game is going
+    Play,
+
+    /// Signals to the player that the game has ended and the user is lost
+    Lose,
+
+    /// Signals to the player that the game has ended and the user is won
+    Won,
+}
+
+#[wasm_bindgen]
 /// The main Minesweeper engine which contain
 ///  - rows
 ///  - cols
 pub struct MineSweeperEngine {
+    /// The main battlefield of mine sweeper
     battlefield: BattleField,
+
+    /// Returns `true` of the game is over, and we can
+    ///  do nothing with it
+    game_state: GameState,
 }
 
 #[wasm_bindgen]
@@ -18,7 +36,10 @@ impl MineSweeperEngine {
     pub fn create(rows: u16, cols: u16, bombs: u16) -> Self {
         let battlefield = BattleField::new(rows as usize, cols as usize, bombs);
 
-        Self { battlefield }
+        Self {
+            battlefield,
+            game_state: GameState::Play,
+        }
     }
 
     /// Reveals the cell by providing id
@@ -32,7 +53,18 @@ impl MineSweeperEngine {
             .map(|ref cell| self.convert_cell_into_wasm(cell))
             .collect();
 
+        // Updates `game_is_over` flag to set the actual game state
+        if reveal.game_is_over {
+            self.game_state = GameState::Lose;
+        }
+
         cells
+    }
+
+    /// Returns a game state of the game
+    #[wasm_bindgen(js_name = getGameState)]
+    pub fn game_state(&self) -> GameState {
+        self.game_state
     }
 
     /// Returns map to the client

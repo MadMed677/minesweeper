@@ -1,5 +1,10 @@
 import * as PIXI from 'pixi.js';
-import {MineSweeperEngine, WasmCell, WasmCellState} from '@minesweeper/engine';
+import {
+    GameState,
+    MineSweeperEngine,
+    WasmCell,
+    WasmCellState,
+} from '@minesweeper/engine';
 
 import {CellVisual, ICellVisualProps} from './visuals/cell.visual';
 import {IVisual} from './visuals/visual.interface';
@@ -24,6 +29,10 @@ export class MinesweeperClientApplication {
         height: DEFAULT_CANVAS_HEIGHT,
         backgroundColor: 2174781,
     });
+
+    rows!: number;
+    cols!: number;
+    bombs!: number;
 
     /**
      * Load all textures and executes `callback` when all textures
@@ -69,7 +78,30 @@ export class MinesweeperClientApplication {
                 PIXI: PIXI,
             });
 
-        document.body.appendChild(this.application.view);
+        const $gameCanvas =
+            document.querySelector<HTMLCanvasElement>('#game-canvas');
+        const $resetButton =
+            document.querySelector<HTMLButtonElement>('#game-reset_game');
+
+        if (!$gameCanvas) {
+            throw new Error('Cannot find "#game-canvas" element on the page');
+        }
+
+        if (!$resetButton) {
+            throw new Error(
+                'Cannot find "#game-reset_game" element on the page',
+            );
+        }
+
+        $gameCanvas.appendChild(this.application.view);
+        $resetButton.addEventListener('click', () => {
+            this.minesweeperEngine = MineSweeperEngine.create(
+                this.rows,
+                this.cols,
+                this.bombs,
+            );
+            this.generateField(this.minesweeperEngine.getField());
+        });
 
         this.interactionManager = this.application.renderer.plugins
             .interaction as PIXI.InteractionManager;
@@ -77,6 +109,10 @@ export class MinesweeperClientApplication {
 
     /** Creates a canvas for the battlefield */
     public async createBattlefield(rows: number, cols: number, bombs: number) {
+        this.rows = rows;
+        this.cols = cols;
+        this.bombs = bombs;
+
         /** Updates application by specific column sizes */
         this.application.view.width = COLUMN_SIZE * cols;
         this.application.view.height = COLUMN_SIZE * rows;
@@ -96,6 +132,10 @@ export class MinesweeperClientApplication {
 
             const cells: Array<WasmCell> =
                 this.minesweeperEngine.reveal(entityId);
+
+            if (this.minesweeperEngine.getGameState() === GameState.Lose) {
+                console.warn('Game is over');
+            }
 
             cells.forEach(cell => {
                 const visual = this.mapState.get(cell.id);
