@@ -51,6 +51,15 @@ pub struct Cell {
 }
 
 impl Cell {
+    pub fn new(id: CellId, ctype: CellType, position: CellPosition) -> Self {
+        Self {
+            id,
+            ctype,
+            state: CellState::Hidden,
+            position,
+        }
+    }
+
     /// Reveal the cell
     pub fn reveal(&mut self) {
         self.state = CellState::Revealed;
@@ -58,6 +67,74 @@ impl Cell {
 
     /// Mark the cell as a flag
     pub fn flag(&mut self) {
-        self.state = CellState::Flagged;
+        if self.state == CellState::Flagged {
+            self.state = CellState::Hidden;
+        } else {
+            self.state = CellState::Flagged;
+        }
+    }
+}
+
+#[cfg(test)]
+mod battlefield_cell {
+    use crate::engine::{Cell, CellPosition, CellState, CellType};
+
+    #[test]
+    fn should_create_cell_via_constructor() {
+        let cell = Cell::new(0, CellType::Empty(0), CellPosition { x: 0, y: 0 });
+
+        assert_eq!(
+            cell,
+            Cell {
+                id: 0,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 0, y: 0 },
+            }
+        );
+    }
+
+    #[test]
+    fn should_reveal_the_cell() {
+        let mut cell = Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        };
+
+        cell.reveal();
+
+        assert_eq!(
+            cell,
+            Cell {
+                id: 0,
+                state: CellState::Revealed,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 0, y: 0 },
+            }
+        );
+    }
+
+    #[test]
+    fn should_flag_the_cell() {
+        let mut cell = Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        };
+
+        cell.flag();
+
+        assert_eq!(
+            cell,
+            Cell {
+                id: 0,
+                state: CellState::Flagged,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 0, y: 0 },
+            }
+        );
     }
 }

@@ -139,7 +139,6 @@ export class MinesweeperClientApplication {
             if (isFlaggedEvent) {
                 const cell: Readonly<WasmCell> =
                     this.minesweeperEngine.flag(entityId);
-                console.log('cell: ', cell);
 
                 const visual = this.mapState.get(cell.id);
                 if (!visual) {
@@ -147,7 +146,7 @@ export class MinesweeperClientApplication {
                 }
 
                 visual.setProps({
-                    status: WasmCellState.Flagged,
+                    status: cell.status,
                 });
                 visual.render();
             } else {

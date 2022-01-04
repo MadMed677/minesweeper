@@ -25,7 +25,6 @@ impl BattleField {
     ///  But it should place bombs and text messages recording to the bombs
     pub fn new(rows: usize, cols: usize, bombs: u16) -> Self {
         let mut battlefield_map = Vec::with_capacity(cols);
-        let mut unique_id = 0;
 
         // Calculates bomb positions in random place on the map
         let mut bombs_map = Vec::<CellPosition>::with_capacity(bombs as usize);
@@ -44,6 +43,7 @@ impl BattleField {
             bombs_map.push(bomb_position);
         }
 
+        let mut unique_id = 0;
         for col_index in 0..cols {
             battlefield_map.push(Vec::with_capacity(rows));
 
@@ -55,15 +55,14 @@ impl BattleField {
                     }
                 }
 
-                battlefield_map[col_index].push(Cell {
-                    id: unique_id,
+                battlefield_map[col_index].push(Cell::new(
+                    unique_id,
                     ctype,
-                    state: CellState::Hidden,
-                    position: CellPosition {
+                    CellPosition {
                         x: col_index as i16,
                         y: row_index as i16,
                     },
-                });
+                ));
 
                 unique_id += 1;
             }
@@ -262,7 +261,7 @@ impl BattleField {
 
 #[cfg(test)]
 mod battlefield_test {
-    use crate::engine::{BattleField, Cell, CellPosition, CellState, CellType};
+    use crate::engine::{BattleField, Cell, CellPosition, CellType};
 
     #[test]
     fn should_create_field_4_by_10() {
@@ -298,12 +297,7 @@ mod battlefield_test {
         if let Some(c) = cell {
             assert_eq!(
                 *c,
-                Cell {
-                    id: 55,
-                    position: CellPosition { x: 5, y: 5 },
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0)
-                }
+                Cell::new(55, CellType::Empty(0), CellPosition { x: 5, y: 5 }),
             )
         }
     }
