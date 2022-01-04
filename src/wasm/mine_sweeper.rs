@@ -60,6 +60,12 @@ impl MineSweeperEngine {
         cells
     }
 
+    pub fn flag(&mut self, cell_id: CellId) -> JsValue {
+        let cell = self.battlefield.flag(cell_id);
+
+        self.convert_cell_into_wasm(&cell)
+    }
+
     /// Returns a game state of the game
     #[wasm_bindgen(js_name = getGameState)]
     pub fn game_state(&self) -> GameState {
@@ -89,6 +95,7 @@ impl MineSweeperEngine {
             status: match cell.state {
                 CellState::Hidden => WasmCellState::Hidden,
                 CellState::Revealed => WasmCellState::Revealed,
+                CellState::Flagged => WasmCellState::Flagged,
             },
             ctype: WasmCType {
                 name: match cell.ctype {

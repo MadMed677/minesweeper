@@ -28,4 +28,5 @@ pub struct WasmCell {
 pub enum WasmCellState {
     Hidden,
     Revealed,
+    Flagged,
 }

@@ -142,6 +142,15 @@ impl BattleField {
         }
     }
 
+    /// Flag the cell by provided `CellId` and
+    ///  returns the Cell
+    pub fn flag(&mut self, cell_id: CellId) -> Cell {
+        let cell = self.get_mut(cell_id);
+        cell.flag();
+
+        *cell
+    }
+
     /// Reveals the cell and iteratively execute `flood_fill` method
     ///  to calculate all near cells and reveal them too if
     ///  they have an `Empty` status and the value of the

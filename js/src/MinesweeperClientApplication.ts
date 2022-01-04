@@ -45,6 +45,7 @@ export class MinesweeperClientApplication {
             PIXI.Loader.shared
                 .add('empty_not_selected', 'assets/minesweeper_00.png')
                 .add('empty_selected', 'assets/minesweeper_01.png')
+                .add('flagged', 'assets/minesweeper_02.png')
                 .add('bomb', 'assets/minesweeper_05.png')
                 .add('bomb_exploded', 'assets/minesweeper_06.png')
                 .add('mark_1', 'assets/minesweeper_08.png')
@@ -124,29 +125,51 @@ export class MinesweeperClientApplication {
         this.generateField(this.minesweeperEngine.getField());
 
         this.interactionManager.on('pointerup', (e: PIXI.InteractionEvent) => {
+            /**
+             * Assumes that if user uses `altKey` it means that
+             *  user wants to flag the field
+             */
+            const isFlaggedEvent = e.data.originalEvent.altKey;
             const entityId = Number(e.target?.name);
 
             if (typeof entityId !== 'number') {
                 return;
             }
 
-            const cells: Array<WasmCell> =
-                this.minesweeperEngine.reveal(entityId);
+            if (isFlaggedEvent) {
+                const cell: Readonly<WasmCell> =
+                    this.minesweeperEngine.flag(entityId);
+                console.log('cell: ', cell);
 
-            if (this.minesweeperEngine.getGameState() === GameState.Lose) {
-                console.warn('Game is over');
-            }
-
-            cells.forEach(cell => {
                 const visual = this.mapState.get(cell.id);
-
                 if (!visual) {
                     throw new Error(`Cannot find visual by id: ${cell.id}`);
                 }
 
-                visual.setProps({status: WasmCellState.Revealed});
+                visual.setProps({
+                    status: WasmCellState.Flagged,
+                });
                 visual.render();
-            });
+            } else {
+                const cells: ReadonlyArray<WasmCell> =
+                    // const cells: Array<WasmCell> =
+                    this.minesweeperEngine.reveal(entityId);
+
+                if (this.minesweeperEngine.getGameState() === GameState.Lose) {
+                    console.warn('Game is over');
+                }
+
+                cells.forEach(cell => {
+                    const visual = this.mapState.get(cell.id);
+
+                    if (!visual) {
+                        throw new Error(`Cannot find visual by id: ${cell.id}`);
+                    }
+
+                    visual.setProps({status: WasmCellState.Revealed});
+                    visual.render();
+                });
+            }
         });
     }
 

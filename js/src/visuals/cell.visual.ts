@@ -80,6 +80,11 @@ export class CellVisual implements IVisual<ICellVisualProps> {
             this.graphics.buttonMode = true;
 
             this.sprite.texture = PIXI.Texture.from('empty_not_selected');
+        } else if (this.props.status === WasmCellState.Flagged) {
+            this.graphics.interactive = true;
+            this.graphics.buttonMode = true;
+
+            this.sprite.texture = PIXI.Texture.from('flagged');
         }
 
         this.graphics.x = this.props.position.x;

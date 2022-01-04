@@ -28,6 +28,9 @@ pub enum CellState {
 
     /// Cell was uncovered
     Revealed,
+
+    /// Cell was flagged as a potential bomb
+    Flagged,
 }
 
 /// Cell represent each tile on the board
@@ -51,5 +54,10 @@ impl Cell {
     /// Reveal the cell
     pub fn reveal(&mut self) {
         self.state = CellState::Revealed;
+    }
+
+    /// Mark the cell as a flag
+    pub fn flag(&mut self) {
+        self.state = CellState::Flagged;
     }
 }
