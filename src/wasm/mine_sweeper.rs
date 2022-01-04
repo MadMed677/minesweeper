@@ -24,8 +24,7 @@ pub struct MineSweeperEngine {
     /// The main battlefield of mine sweeper
     battlefield: BattleField,
 
-    /// Returns `true` of the game is over, and we can
-    ///  do nothing with it
+    /// Returns the game state of the game
     game_state: GameState,
 }
 

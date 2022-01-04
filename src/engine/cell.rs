@@ -16,7 +16,7 @@ pub enum CellType {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Position {
+pub struct CellPosition {
     pub x: i16,
     pub y: i16,
 }
@@ -44,5 +44,12 @@ pub struct Cell {
     /// Cell position
     ///  `position.x` - represents column
     ///  `position.y` - represents row
-    pub position: Position,
+    pub position: CellPosition,
+}
+
+impl Cell {
+    /// Reveal the cell
+    pub fn reveal(&mut self) {
+        self.state = CellState::Revealed;
+    }
 }

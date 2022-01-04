@@ -28,7 +28,7 @@ impl BattleField {
         let mut unique_id = 0;
 
         // Calculates bomb positions in random place on the map
-        let mut bombs_map = Vec::<Position>::with_capacity(bombs as usize);
+        let mut bombs_map = Vec::<CellPosition>::with_capacity(bombs as usize);
         for _ in 0..bombs {
             let mut bomb_position = Self::get_random_bomb_location(cols, rows);
 
@@ -59,7 +59,7 @@ impl BattleField {
                     id: unique_id,
                     ctype,
                     state: CellState::Hidden,
-                    position: Position {
+                    position: CellPosition {
                         x: col_index as i16,
                         y: row_index as i16,
                     },
@@ -90,13 +90,13 @@ impl BattleField {
     }
 
     /// Generates random bomb location by giving `cols` and `rows`
-    fn get_random_bomb_location(cols: usize, rows: usize) -> Position {
+    fn get_random_bomb_location(cols: usize, rows: usize) -> CellPosition {
         let mut rng = rand::thread_rng();
 
         let random_bomb_col = rng.gen_range(0..cols);
         let random_bomb_row = rng.gen_range(0..rows);
 
-        Position {
+        CellPosition {
             x: random_bomb_col as i16,
             y: random_bomb_row as i16,
         }
@@ -108,7 +108,7 @@ impl BattleField {
     ///  reveal all cells which have `0` value
     pub fn reveal(&mut self, cell_id: CellId) -> Reveal {
         let cell = self.get_mut(cell_id);
-        cell.state = CellState::Revealed;
+        cell.reveal();
 
         // Create accumulator to save all revealed Cells
         //  as a first parameter set current `cell` as a first argument
@@ -125,7 +125,7 @@ impl BattleField {
             for col in self.map.iter_mut() {
                 for cell in col {
                     // Update cell state
-                    cell.state = CellState::Revealed;
+                    cell.reveal();
                     result.push(*cell);
                 }
             }
@@ -148,7 +148,7 @@ impl BattleField {
     ///  cell is `0`
     fn reveal_recursively(&mut self, cell_id: CellId, accumulator: &mut Vec<Cell>) {
         let cell = self.get_mut(cell_id);
-        cell.state = CellState::Revealed;
+        cell.reveal();
 
         if cell.ctype == CellType::Empty(0) {
             let position = cell.position;
@@ -161,7 +161,7 @@ impl BattleField {
     ///  `reveal_priv` to reveal these cells if they have `0` value
     ///
     /// @see https://en.wikipedia.org/wiki/Flood_fill
-    fn flood_fill(&mut self, cell_position: Position, accumulator: &mut Vec<Cell>) {
+    fn flood_fill(&mut self, cell_position: CellPosition, accumulator: &mut Vec<Cell>) {
         for col in -1..2 {
             for row in -1..2 {
                 // Check if we out of bounce
@@ -196,12 +196,12 @@ impl BattleField {
 
     /// Find and returns Vec of `Cells` by `position` and returns flood_fill
     ///  of nearby elements from top-left to bottom-right
-    fn update_empty_cells_count<'a>(map: &'a mut BattlefieldMap, cell_position: &'a Position) {
+    fn update_empty_cells_count<'a>(map: &'a mut BattlefieldMap, cell_position: &'a CellPosition) {
         for col in -1..2 {
             for row in -1..2 {
                 let option_cell = Self::get_by_position(
                     map,
-                    Position {
+                    CellPosition {
                         x: cell_position.x + col,
                         y: cell_position.y + row,
                     },
@@ -233,7 +233,7 @@ impl BattleField {
     }
 
     /// Returns a link to the cell by provided `id`
-    fn get_by_position(map: &mut BattlefieldMap, position: Position) -> Option<&mut Cell> {
+    fn get_by_position(map: &mut BattlefieldMap, position: CellPosition) -> Option<&mut Cell> {
         if let Some(item) = map.get_mut(position.x as usize) {
             if let Some(val) = item.get_mut(position.y as usize) {
                 Some(val)
@@ -253,7 +253,7 @@ impl BattleField {
 
 #[cfg(test)]
 mod battlefield_test {
-    use crate::engine::{BattleField, Cell, CellState, CellType, Position};
+    use crate::engine::{BattleField, Cell, CellPosition, CellState, CellType};
 
     #[test]
     fn should_create_field_4_by_10() {
@@ -284,14 +284,14 @@ mod battlefield_test {
     #[test]
     fn should_return_cell_by_specify_position() {
         let mut battlefield = BattleField::new(10, 10, 0);
-        let cell = BattleField::get_by_position(&mut battlefield.map, Position { x: 5, y: 5 });
+        let cell = BattleField::get_by_position(&mut battlefield.map, CellPosition { x: 5, y: 5 });
 
         if let Some(c) = cell {
             assert_eq!(
                 *c,
                 Cell {
                     id: 55,
-                    position: Position { x: 5, y: 5 },
+                    position: CellPosition { x: 5, y: 5 },
                     state: CellState::Hidden,
                     ctype: CellType::Empty(0)
                 }
@@ -302,7 +302,8 @@ mod battlefield_test {
     #[test]
     fn should_not_return_cell_by_specify_position_because_it_is_out_of_bounce() {
         let mut battlefield = BattleField::new(10, 10, 0);
-        let cell = BattleField::get_by_position(&mut battlefield.map, Position { x: -1, y: -1 });
+        let cell =
+            BattleField::get_by_position(&mut battlefield.map, CellPosition { x: -1, y: -1 });
 
         if cell.is_some() {
             panic!("Cell mustn't be Some in that particular scenario");
