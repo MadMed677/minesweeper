@@ -188,9 +188,10 @@ impl BattleField {
                     let x = position_x as usize;
                     let y = position_y as usize;
 
-                    let cell = self.map[x][y];
+                    let mut cell = self.map[x][y];
 
                     if cell.ctype != CellType::Mine && cell.state != CellState::Revealed {
+                        cell.reveal();
                         accumulator.push(cell);
 
                         // If cell is not a mine, and it's not revealed

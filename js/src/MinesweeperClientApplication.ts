@@ -1,10 +1,5 @@
 import * as PIXI from 'pixi.js';
-import {
-    GameState,
-    MineSweeperEngine,
-    WasmCell,
-    WasmCellState,
-} from '@minesweeper/engine';
+import {GameState, MineSweeperEngine, WasmCell} from '@minesweeper/engine';
 
 import {CellVisual, ICellVisualProps} from './visuals/cell.visual';
 import {IVisual} from './visuals/visual.interface';
@@ -132,7 +127,7 @@ export class MinesweeperClientApplication {
             const isFlaggedEvent = e.data.originalEvent.altKey;
             const entityId = Number(e.target?.name);
 
-            if (typeof entityId !== 'number') {
+            if (typeof entityId !== 'number' || isNaN(entityId)) {
                 return;
             }
 
@@ -151,7 +146,6 @@ export class MinesweeperClientApplication {
                 visual.render();
             } else {
                 const cells: ReadonlyArray<WasmCell> =
-                    // const cells: Array<WasmCell> =
                     this.minesweeperEngine.reveal(entityId);
 
                 if (this.minesweeperEngine.getGameState() === GameState.Lose) {
@@ -165,7 +159,7 @@ export class MinesweeperClientApplication {
                         throw new Error(`Cannot find visual by id: ${cell.id}`);
                     }
 
-                    visual.setProps({status: WasmCellState.Revealed});
+                    visual.setProps({status: cell.status});
                     visual.render();
                 });
             }
