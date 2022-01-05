@@ -106,37 +106,38 @@ impl BattleField {
     ///  based on internal logic when we have to
     ///  reveal all cells which have `0` value
     pub fn reveal(&mut self, cell_id: CellId) -> Reveal {
-        let cell = self.get_mut(cell_id);
-        cell.reveal();
-
         // Create accumulator to save all revealed Cells
-        //  as a first parameter set current `cell` as a first argument
-        let mut accumulator = vec![*cell];
-        self.reveal_recursively(cell_id, &mut accumulator);
+        let mut revealed_cells_accumulator = vec![];
+        self.reveal_recursively(cell_id, &mut revealed_cells_accumulator);
 
-        let option_bomb = accumulator.iter().find(|cell| cell.ctype == CellType::Mine);
+        let option_bomb = revealed_cells_accumulator
+            .iter()
+            .find(|cell| cell.ctype == CellType::Mine);
 
         // If we found a bomb we have to move through all
         //  cells, reveal it and return the actual data into
         //  the client
         if option_bomb.is_some() {
-            let mut result = Vec::new();
+            // let mut result = Vec::new();
             for col in self.map.iter_mut() {
                 for cell in col {
-                    // Update cell state
-                    cell.reveal();
-                    result.push(*cell);
+                    // Do not reveal already revealed cells
+                    if cell.state != CellState::Revealed {
+                        // Update cell state
+                        cell.reveal();
+                        revealed_cells_accumulator.push(*cell);
+                    }
                 }
             }
 
             Reveal {
                 game_is_over: true,
-                cells: result,
+                cells: revealed_cells_accumulator,
             }
         } else {
             Reveal {
                 game_is_over: false,
-                cells: accumulator,
+                cells: revealed_cells_accumulator,
             }
         }
     }

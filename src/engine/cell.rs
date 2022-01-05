@@ -51,6 +51,7 @@ pub struct Cell {
 }
 
 impl Cell {
+    /// Creates new `Cell` by default `Hidden` state
     pub fn new(id: CellId, ctype: CellType, position: CellPosition) -> Self {
         Self {
             id,

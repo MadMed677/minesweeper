@@ -53,16 +53,8 @@ impl MineSweeperEngine {
     pub fn reveal(&mut self, cell_id: CellId) -> js_sys::Array {
         let reveal = self.battlefield.reveal(cell_id);
 
-        let mut revealed_elements = 0;
-        for col in self.battlefield.map.iter() {
-            for cell in col {
-                if cell.state == CellState::Revealed {
-                    revealed_elements += 1;
-                }
-            }
-        }
-
-        self.revealed_elements = revealed_elements;
+        // Add into `revealed_elements` all new revealed cells count
+        self.revealed_elements += reveal.cells.len() as i16;
 
         // Returns a vector of changed cells
         let cells = reveal
@@ -74,9 +66,7 @@ impl MineSweeperEngine {
         // Updates `game_is_over` flag to set the actual game state
         if reveal.game_is_over {
             self.game_state = GameState::Lose;
-        }
-
-        if self.elements_to_win_the_game - self.revealed_elements == 0 {
+        } else if self.elements_to_win_the_game - self.revealed_elements == 0 {
             self.game_state = GameState::Won;
         }
 
