@@ -157,6 +157,7 @@ impl BattleField {
     fn reveal_recursively(&mut self, cell_id: CellId, accumulator: &mut Vec<Cell>) {
         let cell = self.get_mut(cell_id);
         cell.reveal();
+        accumulator.push(*cell);
 
         if cell.ctype == CellType::Empty(0) {
             let position = cell.position;
@@ -188,12 +189,9 @@ impl BattleField {
                     let x = position_x as usize;
                     let y = position_y as usize;
 
-                    let mut cell = self.map[x][y];
+                    let cell = self.map[x][y];
 
                     if cell.ctype != CellType::Mine && cell.state != CellState::Revealed {
-                        cell.reveal();
-                        accumulator.push(cell);
-
                         // If cell is not a mine, and it's not revealed
                         // we have to call `reveal` method again
                         self.reveal_recursively(cell.id, accumulator);
