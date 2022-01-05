@@ -149,7 +149,13 @@ export class MinesweeperClientApplication {
                     this.minesweeperEngine.reveal(entityId);
 
                 if (this.minesweeperEngine.getGameState() === GameState.Lose) {
+                    alert('Game is over');
                     console.warn('Game is over');
+                } else if (
+                    this.minesweeperEngine.getGameState() === GameState.Won
+                ) {
+                    alert('Game won');
+                    console.info('Game is won');
                 }
 
                 cells.forEach(cell => {

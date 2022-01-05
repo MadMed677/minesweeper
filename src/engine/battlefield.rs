@@ -9,7 +9,7 @@ type BattlefieldMap = Vec<Vec<Cell>>;
 /// The main map of the battle
 pub struct BattleField {
     /// Current map
-    map: BattlefieldMap,
+    pub map: BattlefieldMap,
 }
 
 pub struct Reveal {

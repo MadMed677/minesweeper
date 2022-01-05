@@ -26,6 +26,12 @@ pub struct MineSweeperEngine {
 
     /// Returns the game state of the game
     game_state: GameState,
+
+    /// How many cells should we reveal to win the game
+    elements_to_win_the_game: i16,
+
+    /// How many cells already revealed
+    revealed_elements: i16,
 }
 
 #[wasm_bindgen]
@@ -38,12 +44,25 @@ impl MineSweeperEngine {
         Self {
             battlefield,
             game_state: GameState::Play,
+            elements_to_win_the_game: (rows * cols - bombs) as i16,
+            revealed_elements: 0,
         }
     }
 
     /// Reveals the cell by providing id
     pub fn reveal(&mut self, cell_id: CellId) -> js_sys::Array {
         let reveal = self.battlefield.reveal(cell_id);
+
+        let mut revealed_elements = 0;
+        for col in self.battlefield.map.iter() {
+            for cell in col {
+                if cell.state == CellState::Revealed {
+                    revealed_elements += 1;
+                }
+            }
+        }
+
+        self.revealed_elements = revealed_elements;
 
         // Returns a vector of changed cells
         let cells = reveal
@@ -55,6 +74,10 @@ impl MineSweeperEngine {
         // Updates `game_is_over` flag to set the actual game state
         if reveal.game_is_over {
             self.game_state = GameState::Lose;
+        }
+
+        if self.elements_to_win_the_game - self.revealed_elements == 0 {
+            self.game_state = GameState::Won;
         }
 
         cells
