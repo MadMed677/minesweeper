@@ -175,7 +175,7 @@ export class MinesweeperClientApplication {
         field.forEach((rows, col_index) => {
             rows.forEach((cell, row_index) => {
                 const cellVisual = new CellVisual(cell.id);
-                cellVisual.setProps({
+                const props = {
                     position: {
                         x: col_index * COLUMN_SIZE,
                         y: row_index * COLUMN_SIZE,
@@ -186,9 +186,12 @@ export class MinesweeperClientApplication {
                     },
                     status: cell.status,
                     ctype: cell.ctype,
-                });
+                };
 
-                cellVisual.render();
+                if (cellVisual.shouldComponentUpdate(props)) {
+                    cellVisual.setProps(props);
+                    cellVisual.render();
+                }
 
                 this.mapState.set(cell.id, cellVisual);
                 this.application.stage.addChild(cellVisual.graphics);
