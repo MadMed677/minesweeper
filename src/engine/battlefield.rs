@@ -68,6 +68,7 @@ impl BattleField {
             }
         }
 
+        // Update counts for each cell which are nearby bombs
         for bomb_position in bombs_map.iter() {
             Self::update_empty_cells_count(&mut battlefield_map, bomb_position);
         }

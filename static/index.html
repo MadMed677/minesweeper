@@ -11,10 +11,19 @@
         display: flex;
         justify-content: center;
       }
+
+      .hidden {
+        display: none;
+      }
     </style>
   </head>
   <body>
     <div class='root-container'>
+      <div id='game-menu'>
+        <button id='game-level_easy'>Easy</button>
+        <button id='game-level_medium'>Medium</button>
+        <button id='game-level_hard'>Hard</button>
+      </div>
       <div id='game-canvas'></div>
       <div class='control-container'>
         <button id='game-reset_game'>

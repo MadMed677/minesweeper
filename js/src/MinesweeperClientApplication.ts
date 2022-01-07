@@ -29,13 +29,21 @@ export class MinesweeperClientApplication {
     cols!: number;
     bombs!: number;
 
+    /** When all textures were loaded set it is as `true` */
+    private isTexturesLoaded = false;
+
     /**
      * Load all textures and executes `callback` when all textures
      *  being loaded
      *
      * @private
      */
-    private static loadAllTextures(): Promise<void> {
+    private loadAllTextures(): Promise<void> {
+        console.log('before isTexturesLoaded: ', this.isTexturesLoaded);
+        if (this.isTexturesLoaded) {
+            return Promise.resolve();
+        }
+
         return new Promise<void>(resolve => {
             PIXI.Loader.shared
                 .add('empty_not_selected', 'assets/minesweeper_00.png')
@@ -52,6 +60,12 @@ export class MinesweeperClientApplication {
                 .add('mark_7', 'assets/minesweeper_14.png')
                 .add('mark_8', 'assets/minesweeper_15.png')
                 .load(() => {
+                    this.isTexturesLoaded = true;
+                    console.log(
+                        'after isTexturesLoaded: ',
+                        this.isTexturesLoaded,
+                    );
+
                     resolve();
                 });
         });
@@ -89,35 +103,12 @@ export class MinesweeperClientApplication {
             );
         }
 
-        $gameCanvas.appendChild(this.application.view);
         $resetButton.addEventListener('click', () => {
-            this.minesweeperEngine = MineSweeperEngine.create(
-                this.rows,
-                this.cols,
-                this.bombs,
-            );
-            this.generateField(this.minesweeperEngine.getField());
+            this.createBattlefield(this.rows, this.cols, this.bombs);
         });
 
         this.interactionManager = this.application.renderer.plugins
             .interaction as PIXI.InteractionManager;
-    }
-
-    /** Creates a canvas for the battlefield */
-    public async createBattlefield(rows: number, cols: number, bombs: number) {
-        this.rows = rows;
-        this.cols = cols;
-        this.bombs = bombs;
-
-        /** Updates application by specific column sizes */
-        this.application.view.width = COLUMN_SIZE * cols;
-        this.application.view.height = COLUMN_SIZE * rows;
-
-        /** Load all textures and generate field with visuals */
-        await MinesweeperClientApplication.loadAllTextures();
-
-        this.minesweeperEngine = MineSweeperEngine.create(rows, cols, bombs);
-        this.generateField(this.minesweeperEngine.getField());
 
         this.interactionManager.on('pointerup', (e: PIXI.InteractionEvent) => {
             /**
@@ -170,6 +161,29 @@ export class MinesweeperClientApplication {
                 });
             }
         });
+    }
+
+    /** Creates a canvas for the battlefield */
+    public async createBattlefield(
+        rows: number,
+        cols: number,
+        bombs: number,
+    ): Promise<PIXI.Application['view']> {
+        this.rows = rows;
+        this.cols = cols;
+        this.bombs = bombs;
+
+        /** Updates application by specific column sizes */
+        this.application.view.width = COLUMN_SIZE * cols;
+        this.application.view.height = COLUMN_SIZE * rows;
+
+        /** Load all textures and generate field with visuals */
+        await this.loadAllTextures();
+
+        this.minesweeperEngine = MineSweeperEngine.create(rows, cols, bombs);
+        this.generateField(this.minesweeperEngine.getField());
+
+        return this.application.view;
     }
 
     /**
