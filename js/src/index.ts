@@ -47,8 +47,8 @@ export class Application {
         }
 
         $gameMenu.addEventListener('click', e => {
-            // @ts-ignore
-            const buttonId: ButtonElementType = e.target?.id;
+            const button = e.target as HTMLButtonElement;
+            const buttonId = button.id as ButtonElementType;
 
             switch (buttonId) {
                 case ButtonElementType.Easy: {
@@ -76,7 +76,5 @@ export class Application {
                 }
             }
         });
-
-        // $gameMenu.className = 'hidden';
     }
 }
