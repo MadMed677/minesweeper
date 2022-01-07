@@ -1,4 +1,5 @@
 import {MinesweeperClientApplication} from './MinesweeperClientApplication';
+import {DifficultyConfig} from './difficulty_config';
 
 const $gameCanvas = document.querySelector<HTMLDivElement>('#game-canvas');
 const $gameMenu = document.querySelector<HTMLDivElement>('#game-menu');
@@ -7,11 +8,19 @@ enum ButtonElementType {
     Easy = 'game-level_easy',
     Medium = 'game-level_medium',
     Hard = 'game-level_hard',
+    Reset = 'game-reset_game',
+}
+
+interface IDifficultyConfig {
+    rows: number;
+    cols: number;
+    bombs: number;
 }
 
 /** The main entry point into the application */
 export class Application {
     private minesweeperApplication!: MinesweeperClientApplication;
+    private gameConfig: IDifficultyConfig | undefined;
 
     /** The first method (aka `main`) to run the code */
     public async run(): Promise<void> {
@@ -21,16 +30,14 @@ export class Application {
     }
 
     /** Render the game when user picked up the level of hardness */
-    private async renderTheGame(
-        rows: number,
-        cols: number,
-        bombs: number,
-    ): Promise<void> {
+    private async renderTheGame(config: IDifficultyConfig): Promise<void> {
+        this.gameConfig = config;
+
         const applicationView =
             await this.minesweeperApplication.createBattlefield(
-                rows,
-                cols,
-                bombs,
+                config.rows,
+                config.cols,
+                config.bombs,
             );
 
         if (!$gameCanvas) {
@@ -50,30 +57,36 @@ export class Application {
             const button = e.target as HTMLButtonElement;
             const buttonId = button.id as ButtonElementType;
 
-            switch (buttonId) {
-                case ButtonElementType.Easy: {
-                    this.renderTheGame(10, 7, 10);
+            const config = (() => {
+                switch (buttonId) {
+                    case ButtonElementType.Easy: {
+                        return DifficultyConfig.easy;
+                    }
 
-                    break;
+                    case ButtonElementType.Medium: {
+                        return DifficultyConfig.medium;
+                    }
+
+                    case ButtonElementType.Hard: {
+                        return DifficultyConfig.hard;
+                    }
+
+                    default: {
+                        return;
+                    }
+                }
+            })();
+
+            if (buttonId === ButtonElementType.Reset) {
+                if (!this.gameConfig) {
+                    return;
                 }
 
-                case ButtonElementType.Medium: {
-                    this.renderTheGame(12, 9, 10);
+                this.renderTheGame(this.gameConfig);
+            }
 
-                    break;
-                }
-
-                case ButtonElementType.Hard: {
-                    this.renderTheGame(15, 10, 20);
-
-                    break;
-                }
-
-                default: {
-                    console.log('non covered', buttonId);
-
-                    break;
-                }
+            if (config) {
+                this.renderTheGame(config);
             }
         });
     }

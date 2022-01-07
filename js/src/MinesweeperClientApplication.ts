@@ -25,10 +25,6 @@ export class MinesweeperClientApplication {
         backgroundColor: 2174781,
     });
 
-    rows!: number;
-    cols!: number;
-    bombs!: number;
-
     /** When all textures were loaded set it is as `true` */
     private isTexturesLoaded = false;
 
@@ -39,7 +35,6 @@ export class MinesweeperClientApplication {
      * @private
      */
     private loadAllTextures(): Promise<void> {
-        console.log('before isTexturesLoaded: ', this.isTexturesLoaded);
         if (this.isTexturesLoaded) {
             return Promise.resolve();
         }
@@ -61,10 +56,6 @@ export class MinesweeperClientApplication {
                 .add('mark_8', 'assets/minesweeper_15.png')
                 .load(() => {
                     this.isTexturesLoaded = true;
-                    console.log(
-                        'after isTexturesLoaded: ',
-                        this.isTexturesLoaded,
-                    );
 
                     resolve();
                 });
@@ -87,25 +78,6 @@ export class MinesweeperClientApplication {
             window.__PIXI_INSPECTOR_GLOBAL_HOOK__.register({
                 PIXI: PIXI,
             });
-
-        const $gameCanvas =
-            document.querySelector<HTMLCanvasElement>('#game-canvas');
-        const $resetButton =
-            document.querySelector<HTMLButtonElement>('#game-reset_game');
-
-        if (!$gameCanvas) {
-            throw new Error('Cannot find "#game-canvas" element on the page');
-        }
-
-        if (!$resetButton) {
-            throw new Error(
-                'Cannot find "#game-reset_game" element on the page',
-            );
-        }
-
-        $resetButton.addEventListener('click', () => {
-            this.createBattlefield(this.rows, this.cols, this.bombs);
-        });
 
         this.interactionManager = this.application.renderer.plugins
             .interaction as PIXI.InteractionManager;
@@ -169,10 +141,6 @@ export class MinesweeperClientApplication {
         cols: number,
         bombs: number,
     ): Promise<PIXI.Application['view']> {
-        this.rows = rows;
-        this.cols = cols;
-        this.bombs = bombs;
-
         /** Updates application by specific column sizes */
         this.application.view.width = COLUMN_SIZE * cols;
         this.application.view.height = COLUMN_SIZE * rows;
