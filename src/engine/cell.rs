@@ -66,7 +66,8 @@ impl Cell {
         self.state = CellState::Revealed;
     }
 
-    /// Mark the cell as a flag
+    /// Mark the cell as a flag if it's not
+    ///  or unmark it as a flag if it's flagged
     pub fn flag(&mut self) {
         if self.state == CellState::Flagged {
             self.state = CellState::Hidden;
@@ -133,6 +134,32 @@ mod battlefield_cell {
             Cell {
                 id: 0,
                 state: CellState::Flagged,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 0, y: 0 },
+            }
+        );
+    }
+
+    #[test]
+    fn should_unflag_the_cell() {
+        let mut cell = Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        };
+
+        // Should flag the cell
+        cell.flag();
+
+        // Should unflag the cell
+        cell.flag();
+
+        assert_eq!(
+            cell,
+            Cell {
+                id: 0,
+                state: CellState::Hidden,
                 ctype: CellType::Empty(0),
                 position: CellPosition { x: 0, y: 0 },
             }

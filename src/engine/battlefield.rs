@@ -9,7 +9,7 @@ type BattlefieldMap = Vec<Vec<Cell>>;
 /// The main map of the battle
 pub struct BattleField {
     /// Current map
-    pub map: BattlefieldMap,
+    map: BattlefieldMap,
 }
 
 pub struct Reveal {
@@ -120,6 +120,11 @@ impl BattleField {
         Self {
             map: battlefield_map,
         }
+    }
+
+    /// Creates a battlefield with provided map
+    fn with_map(map: BattlefieldMap) -> Self {
+        Self { map }
     }
 
     /// Generates random bomb location by giving `cols` and `rows`
@@ -261,7 +266,7 @@ impl BattleField {
 
 #[cfg(test)]
 mod battlefield_test {
-    use crate::engine::{BattleField, Cell, CellPosition, CellType};
+    use crate::engine::*;
 
     #[test]
     fn should_create_field_4_by_10() {
@@ -310,7 +315,58 @@ mod battlefield_test {
         if cell.is_some() {
             panic!("Cell mustn't be Some in that particular scenario");
         } else {
-            assert_eq!(cell.is_none(), true);
+            assert!(cell.is_none());
+        }
+    }
+
+    mod event_logic {
+        use crate::engine::*;
+
+        #[test]
+        fn should_reveal_all_cells_if_none_bombs_were_found() {
+            let map = vec![
+                vec![
+                    Cell::new(0, CellType::Empty(0), CellPosition { x: 0, y: 0 }),
+                    Cell::new(1, CellType::Empty(0), CellPosition { x: 0, y: 1 }),
+                    Cell::new(2, CellType::Empty(0), CellPosition { x: 0, y: 2 }),
+                ],
+                vec![
+                    Cell::new(3, CellType::Empty(0), CellPosition { x: 1, y: 0 }),
+                    Cell::new(4, CellType::Empty(0), CellPosition { x: 1, y: 1 }),
+                    Cell::new(5, CellType::Empty(0), CellPosition { x: 1, y: 2 }),
+                ],
+                vec![
+                    Cell::new(6, CellType::Empty(0), CellPosition { x: 2, y: 0 }),
+                    Cell::new(7, CellType::Empty(0), CellPosition { x: 2, y: 1 }),
+                    Cell::new(8, CellType::Empty(0), CellPosition { x: 2, y: 2 }),
+                ],
+            ];
+            let mut battlefield = BattleField::with_map(map);
+
+            // Start reveal from the top-left cell
+            //  it should affect all cells and at
+            //  the end all 9 cells must be revealed
+            let revealed = battlefield.reveal(0);
+            let revealed_cells_state = revealed
+                .cells
+                .into_iter()
+                .map(|cell| cell.state)
+                .collect::<Vec<CellState>>();
+
+            assert_eq!(
+                revealed_cells_state,
+                vec![
+                    CellState::Revealed,
+                    CellState::Revealed,
+                    CellState::Revealed,
+                    CellState::Revealed,
+                    CellState::Revealed,
+                    CellState::Revealed,
+                    CellState::Revealed,
+                    CellState::Revealed,
+                    CellState::Revealed
+                ]
+            );
         }
     }
 }
