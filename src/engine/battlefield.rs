@@ -70,23 +70,56 @@ impl BattleField {
 
         // Update counts for each cell which are nearby bombs
         for bomb_position in bombs_map.iter() {
-            Self::update_empty_cells_count(&mut battlefield_map, bomb_position);
+            for col in -1..2 {
+                for row in -1..2 {
+                    let position_x = bomb_position.x + col;
+                    let position_y = bomb_position.y + row;
+
+                    // Check if position for current cell inside the map
+                    //  not less than 0
+                    //  and not more than number of cols and rows
+                    let is_position_inside_map = position_x >= 0
+                        && position_y >= 0
+                        && position_x < cols as i16
+                        && position_y < rows as i16;
+
+                    if is_position_inside_map {
+                        let x = position_x as usize;
+                        let y = position_y as usize;
+
+                        let cell = &mut battlefield_map[x][y];
+
+                        let new_type = match cell.ctype {
+                            CellType::Mine => CellType::Mine,
+                            CellType::Empty(count) => CellType::Empty(count + 1),
+                        };
+
+                        cell.ctype = new_type;
+                    }
+
+                    // let option_cell = Self::get_by_position(
+                    //     &mut battlefield_map,
+                    //     CellPosition {
+                    //         x: bomb_position.x + col,
+                    //         y: bomb_position.y + row,
+                    //     },
+                    // );
+                    //
+                    // if let Some(cell) = option_cell {
+                    //     let new_type = match cell.ctype {
+                    //         CellType::Mine => CellType::Mine,
+                    //         CellType::Empty(count) => CellType::Empty(count + 1),
+                    //     };
+                    //
+                    //     cell.ctype = new_type;
+                    // }
+                }
+            }
         }
 
         Self {
             map: battlefield_map,
         }
-    }
-
-    /// Returns cols count based on `map`
-    fn cols_count(&self) -> u16 {
-        self.map.len() as u16
-    }
-
-    /// Returns rows count based on `map`
-    /// Assumes that all cells have the same `cols` and `rows`
-    fn rows_count(&self) -> u16 {
-        self.map[0].len() as u16
     }
 
     /// Generates random bomb location by giving `cols` and `rows`
@@ -175,54 +208,20 @@ impl BattleField {
     fn flood_fill(&mut self, cell_position: CellPosition, accumulator: &mut Vec<Cell>) {
         for col in -1..2 {
             for row in -1..2 {
-                // Check if we out of bounce
-                let position_x = cell_position.x + col;
-                let position_y = cell_position.y + row;
-
-                // Check if position for current cell inside the map
-                //  not less than 0
-                //  and not more than number of cols and rows
-                let is_position_inside_map = position_x >= 0
-                    && position_y >= 0
-                    && position_x < self.cols_count() as i16
-                    && position_y < self.rows_count() as i16;
-
-                if is_position_inside_map {
-                    let x = position_x as usize;
-                    let y = position_y as usize;
-
-                    let cell = self.map[x][y];
-
-                    if cell.ctype != CellType::Mine && cell.state != CellState::Revealed {
-                        // If cell is not a mine, and it's not revealed
-                        // we have to call `reveal` method again
-                        self.reveal_recursively(cell.id, accumulator);
-                    }
-                }
-            }
-        }
-    }
-
-    /// Find and returns Vec of `Cells` by `position` and returns flood_fill
-    ///  of nearby elements from top-left to bottom-right
-    fn update_empty_cells_count<'a>(map: &'a mut BattlefieldMap, cell_position: &'a CellPosition) {
-        for col in -1..2 {
-            for row in -1..2 {
-                let option_cell = Self::get_by_position(
-                    map,
-                    CellPosition {
-                        x: cell_position.x + col,
-                        y: cell_position.y + row,
-                    },
-                );
+                let position = CellPosition {
+                    x: cell_position.x + col,
+                    y: cell_position.y + row,
+                };
+                let option_cell = self.get_by_position(position);
 
                 if let Some(cell) = option_cell {
-                    let new_type = match cell.ctype {
-                        CellType::Mine => CellType::Mine,
-                        CellType::Empty(count) => CellType::Empty(count + 1),
-                    };
+                    if cell.ctype != CellType::Mine && cell.state != CellState::Revealed {
+                        let cell_id = cell.id;
 
-                    cell.ctype = new_type;
+                        // If cell is not a mine, and it's not revealed
+                        // we have to call `reveal` method again
+                        self.reveal_recursively(cell_id, accumulator);
+                    }
                 }
             }
         }
@@ -242,10 +241,10 @@ impl BattleField {
     }
 
     /// Returns a link to the cell by provided `id`
-    fn get_by_position(map: &mut BattlefieldMap, position: CellPosition) -> Option<&mut Cell> {
-        if let Some(item) = map.get_mut(position.x as usize) {
-            if let Some(val) = item.get_mut(position.y as usize) {
-                Some(val)
+    fn get_by_position(&self, position: CellPosition) -> Option<&Cell> {
+        if let Some(column) = self.map.get(position.x as usize) {
+            if let Some(cell) = column.get(position.y as usize) {
+                Some(cell)
             } else {
                 None
             }
@@ -292,22 +291,21 @@ mod battlefield_test {
 
     #[test]
     fn should_return_cell_by_specify_position() {
-        let mut battlefield = BattleField::new(10, 10, 0);
-        let cell = BattleField::get_by_position(&mut battlefield.map, CellPosition { x: 5, y: 5 });
+        let battlefield = BattleField::new(10, 10, 0);
+        let cell = battlefield.get_by_position(CellPosition { x: 1, y: 5 });
 
         if let Some(c) = cell {
             assert_eq!(
                 *c,
-                Cell::new(55, CellType::Empty(0), CellPosition { x: 5, y: 5 }),
+                Cell::new(15, CellType::Empty(0), CellPosition { x: 1, y: 5 }),
             )
         }
     }
 
     #[test]
     fn should_not_return_cell_by_specify_position_because_it_is_out_of_bounce() {
-        let mut battlefield = BattleField::new(10, 10, 0);
-        let cell =
-            BattleField::get_by_position(&mut battlefield.map, CellPosition { x: -1, y: -1 });
+        let battlefield = BattleField::new(10, 10, 0);
+        let cell = battlefield.get_by_position(CellPosition { x: -3, y: -1 });
 
         if cell.is_some() {
             panic!("Cell mustn't be Some in that particular scenario");
