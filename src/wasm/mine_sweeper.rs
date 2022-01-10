@@ -5,7 +5,14 @@ use crate::wasm::wasm_types::*;
 
 #[wasm_bindgen]
 #[derive(Copy, Clone)]
-pub enum GameState {
+pub struct GameState {
+    pub status: GameStatus,
+    pub flags: u16,
+}
+
+#[wasm_bindgen]
+#[derive(Copy, Clone)]
+pub enum GameStatus {
     /// Signals to the player that the game is going
     Play,
 
@@ -40,10 +47,14 @@ impl MineSweeperEngine {
     ///  rows and columns
     pub fn create(rows: u16, cols: u16, bombs: u16) -> Self {
         let battlefield = BattleField::new(rows as usize, cols as usize, bombs);
+        let flgs = battlefield.max_flag_values;
 
         Self {
             battlefield,
-            game_state: GameState::Play,
+            game_state: GameState {
+                status: GameStatus::Play,
+                flags: flgs,
+            },
             elements_to_win_the_game: (rows * cols - bombs) as i16,
             revealed_elements: 0,
         }
@@ -65,9 +76,9 @@ impl MineSweeperEngine {
 
         // Updates `game_is_over` flag to set the actual game state
         if reveal.game_is_over {
-            self.game_state = GameState::Lose;
+            self.game_state.status = GameStatus::Lose;
         } else if self.elements_to_win_the_game - self.revealed_elements == 0 {
-            self.game_state = GameState::Won;
+            self.game_state.status = GameStatus::Won;
         }
 
         cells
@@ -76,6 +87,7 @@ impl MineSweeperEngine {
     pub fn flag(&mut self, cell_id: CellId) -> JsValue {
         let cell = self.battlefield.flag(cell_id);
 
+        self.game_state.flags = self.battlefield.max_flag_values;
         self.convert_cell_into_wasm(&cell)
     }
 

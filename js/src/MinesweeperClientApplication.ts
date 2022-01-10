@@ -1,5 +1,10 @@
 import * as PIXI from 'pixi.js';
-import {GameState, MineSweeperEngine, WasmCell} from '@minesweeper/engine';
+import {
+    MineSweeperEngine,
+    WasmCell,
+    GameStatus,
+    GameState,
+} from '@minesweeper/engine';
 
 import {CellVisual, ICellVisualProps} from './visuals/cell.visual';
 import {IVisual} from './visuals/visual.interface';
@@ -27,6 +32,8 @@ export class MinesweeperClientApplication {
 
     /** When all textures were loaded set it is as `true` */
     private isTexturesLoaded = false;
+
+    private gameState: GameState | undefined;
 
     /**
      * Load all textures and executes `callback` when all textures
@@ -111,16 +118,6 @@ export class MinesweeperClientApplication {
                 const cells: ReadonlyArray<WasmCell> =
                     this.minesweeperEngine.reveal(entityId);
 
-                if (this.minesweeperEngine.getGameState() === GameState.Lose) {
-                    alert('Game is over');
-                    console.warn('Game is over');
-                } else if (
-                    this.minesweeperEngine.getGameState() === GameState.Won
-                ) {
-                    alert('Game won');
-                    console.info('Game is won');
-                }
-
                 cells.forEach(cell => {
                     const visual = this.mapState.get(cell.id);
 
@@ -131,6 +128,19 @@ export class MinesweeperClientApplication {
                     visual.setProps({status: cell.status});
                     visual.render();
                 });
+            }
+
+            const gameState = this.minesweeperEngine.getGameState();
+            this.gameState = gameState;
+
+            console.log('this.minesweeperEngine.getGameState(): ', gameState);
+
+            if (gameState.status === GameStatus.Lose) {
+                alert('Game is over');
+                console.warn('Game is over');
+            } else if (gameState.status === GameStatus.Won) {
+                alert('Game won');
+                console.info('Game won');
             }
         });
     }

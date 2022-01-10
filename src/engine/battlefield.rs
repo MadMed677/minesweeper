@@ -10,6 +10,10 @@ type BattlefieldMap = Vec<Vec<Cell>>;
 pub struct BattleField {
     /// Current map
     map: BattlefieldMap,
+
+    /// How many flags user may set
+    ///  it's the same value as bombs
+    pub max_flag_values: u16,
 }
 
 pub struct Reveal {
@@ -119,12 +123,16 @@ impl BattleField {
 
         Self {
             map: battlefield_map,
+            max_flag_values: bombs,
         }
     }
 
     /// Creates a battlefield with provided map
     fn with_map(map: BattlefieldMap) -> Self {
-        Self { map }
+        Self {
+            map,
+            max_flag_values: 1,
+        }
     }
 
     /// Generates random bomb location by giving `cols` and `rows`
@@ -185,9 +193,17 @@ impl BattleField {
     ///  returns the Cell
     pub fn flag(&mut self, cell_id: CellId) -> Cell {
         let cell = self.get_mut(cell_id);
-        cell.flag();
+        let is_flagged = cell.flag();
 
-        *cell
+        let result_cell = *cell;
+
+        if is_flagged {
+            self.max_flag_values -= 1;
+        } else {
+            self.max_flag_values += 1;
+        }
+
+        result_cell
     }
 
     /// Reveals the cell and iteratively execute `flood_fill` method

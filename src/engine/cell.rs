@@ -66,13 +66,19 @@ impl Cell {
         self.state = CellState::Revealed;
     }
 
-    /// Mark the cell as a flag if it's not
-    ///  or unmark it as a flag if it's flagged
-    pub fn flag(&mut self) {
+    /// Mark the cell as a flag if it's not (returns `true`)
+    ///  or unmark it as a flag if it's flagged (returns `false`)
+    pub fn flag(&mut self) -> bool {
         if self.state == CellState::Flagged {
             self.state = CellState::Hidden;
-        } else {
+
+            false
+        } else if self.state == CellState::Hidden {
             self.state = CellState::Flagged;
+
+            true
+        } else {
+            false
         }
     }
 }
@@ -127,7 +133,7 @@ mod battlefield_cell {
             position: CellPosition { x: 0, y: 0 },
         };
 
-        cell.flag();
+        let is_flagged = cell.flag();
 
         assert_eq!(
             cell,
@@ -138,6 +144,8 @@ mod battlefield_cell {
                 position: CellPosition { x: 0, y: 0 },
             }
         );
+
+        assert!(is_flagged);
     }
 
     #[test]
@@ -164,5 +172,30 @@ mod battlefield_cell {
                 position: CellPosition { x: 0, y: 0 },
             }
         );
+    }
+
+    #[test]
+    fn should_not_flag_the_cell_if_it_is_revealed() {
+        let mut cell = Cell {
+            id: 0,
+            state: CellState::Revealed,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        };
+
+        // Should NOT flag the cell
+        let is_flagged = cell.flag();
+
+        assert_eq!(
+            cell,
+            Cell {
+                id: 0,
+                state: CellState::Revealed,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 0, y: 0 },
+            }
+        );
+
+        assert!(!is_flagged);
     }
 }
