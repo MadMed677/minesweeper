@@ -13,7 +13,7 @@ pub struct BattleField {
 
     /// How many flags user may set
     ///  it's the same value as bombs
-    pub max_flag_values: u16,
+    pub flags_left: u16,
 }
 
 pub struct Reveal {
@@ -123,15 +123,26 @@ impl BattleField {
 
         Self {
             map: battlefield_map,
-            max_flag_values: bombs,
+            flags_left: bombs,
         }
     }
 
     /// Creates a battlefield with provided map
     fn with_map(map: BattlefieldMap) -> Self {
+        let bombs_count = map.iter().fold(0, |outer_acc, row| {
+            outer_acc
+                + row.iter().fold(0, |inner_acc, cell| {
+                    if cell.ctype == CellType::Mine {
+                        inner_acc + 1
+                    } else {
+                        inner_acc
+                    }
+                })
+        });
+
         Self {
             map,
-            max_flag_values: 1,
+            flags_left: bombs_count,
         }
     }
 
@@ -192,18 +203,36 @@ impl BattleField {
     /// Flag the cell by provided `CellId` and
     ///  returns the Cell
     pub fn flag(&mut self, cell_id: CellId) -> Cell {
-        let cell = self.get_mut(cell_id);
-        let is_flagged = cell.flag();
+        let cell = self.get(cell_id);
+        let is_flagged = cell.state == CellState::Flagged;
 
-        let result_cell = *cell;
-
+        // User wants to unflag the cell
+        //  we may do that without any restrictions
         if is_flagged {
-            self.max_flag_values -= 1;
-        } else {
-            self.max_flag_values += 1;
-        }
+            self.flags_left += 1;
 
-        result_cell
+            let cell = self.get_mut(cell_id);
+            cell.flag();
+
+            *cell
+        } else {
+            // User wants to flag the cell
+            //  we have to check if is it possible or not
+
+            // We can't flag the cell
+            if self.flags_left == 0 {
+                let cell = self.get_mut(cell_id);
+
+                *cell
+            } else {
+                self.flags_left -= 1;
+
+                let cell = self.get_mut(cell_id);
+                cell.flag();
+
+                *cell
+            }
+        }
     }
 
     /// Reveals the cell and iteratively execute `flood_fill` method
@@ -251,6 +280,19 @@ impl BattleField {
     /// Returns a mutable link to the cell by provided `id`
     pub fn get_mut(&mut self, id: CellId) -> &mut Cell {
         for row in &mut self.map {
+            for cell in row {
+                if cell.id == id {
+                    return cell;
+                }
+            }
+        }
+
+        panic!("Cell didn't find in battlefield by provided id: {}", id);
+    }
+
+    /// Returns immutable link to the cell by provided `id`
+    fn get(&self, id: CellId) -> &Cell {
+        for row in &self.map {
             for cell in row {
                 if cell.id == id {
                     return cell;
@@ -669,6 +711,202 @@ mod battlefield_test {
                 ]
             );
             assert_eq!(revealed_cells_id, vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
+        }
+
+        #[test]
+        fn should_flag_the_cell() {
+            let map = vec![vec![
+                Cell {
+                    id: 0,
+                    state: CellState::Hidden,
+                    ctype: CellType::Empty(0),
+                    position: CellPosition { x: 0, y: 0 },
+                },
+                Cell {
+                    id: 1,
+                    state: CellState::Hidden,
+                    ctype: CellType::Mine,
+                    position: CellPosition { x: 0, y: 0 },
+                },
+            ]];
+            let mut battlefield = BattleField::with_map(map);
+
+            let cell = battlefield.flag(0);
+
+            assert_eq!(
+                cell,
+                Cell {
+                    id: 0,
+                    ctype: CellType::Empty(0),
+                    state: CellState::Flagged,
+                    position: CellPosition { x: 0, y: 0 }
+                }
+            );
+        }
+
+        #[test]
+        fn should_not_flag_the_cell_if_it_is_revealed() {
+            let map = vec![vec![Cell {
+                id: 0,
+                state: CellState::Revealed,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 0, y: 0 },
+            }]];
+            let mut battlefield = BattleField::with_map(map);
+
+            let cell = battlefield.flag(0);
+
+            assert_eq!(
+                cell,
+                Cell {
+                    id: 0,
+                    state: CellState::Revealed,
+                    ctype: CellType::Empty(0),
+                    position: CellPosition { x: 0, y: 0 }
+                }
+            );
+        }
+
+        #[test]
+        fn should_unflag_the_cell_if_it_is_flagged() {
+            let map = vec![vec![Cell {
+                id: 0,
+                state: CellState::Flagged,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 0, y: 0 },
+            }]];
+            let mut battlefield = BattleField::with_map(map);
+
+            let cell = battlefield.flag(0);
+
+            assert_eq!(
+                cell,
+                Cell {
+                    id: 0,
+                    state: CellState::Hidden,
+                    ctype: CellType::Empty(0),
+                    position: CellPosition { x: 0, y: 0 }
+                }
+            );
+        }
+
+        #[test]
+        fn should_build_correct_max_flag_values_counter() {
+            let map = vec![vec![
+                Cell {
+                    id: 0,
+                    state: CellState::Hidden,
+                    ctype: CellType::Empty(0),
+                    position: CellPosition { x: 0, y: 0 },
+                },
+                Cell {
+                    id: 1,
+                    state: CellState::Hidden,
+                    ctype: CellType::Mine,
+                    position: CellPosition { x: 0, y: 0 },
+                },
+                Cell {
+                    id: 2,
+                    state: CellState::Hidden,
+                    ctype: CellType::Mine,
+                    position: CellPosition { x: 0, y: 0 },
+                },
+            ]];
+            let mut battlefield = BattleField::with_map(map);
+
+            assert_eq!(battlefield.flags_left, 2);
+
+            battlefield.flag(0);
+
+            assert_eq!(battlefield.flags_left, 1);
+        }
+
+        #[test]
+        fn should_not_set_more_flags_that_is_possible() {
+            let map = vec![vec![
+                Cell {
+                    id: 0,
+                    state: CellState::Hidden,
+                    ctype: CellType::Empty(0),
+                    position: CellPosition { x: 0, y: 0 },
+                },
+                Cell {
+                    id: 1,
+                    state: CellState::Hidden,
+                    ctype: CellType::Mine,
+                    position: CellPosition { x: 0, y: 0 },
+                },
+                Cell {
+                    id: 2,
+                    state: CellState::Hidden,
+                    ctype: CellType::Mine,
+                    position: CellPosition { x: 0, y: 0 },
+                },
+            ]];
+            let mut battlefield = BattleField::with_map(map);
+
+            let cell0 = battlefield.flag(0);
+            let cell1 = battlefield.flag(1);
+            let cell2 = battlefield.flag(2);
+
+            assert_eq!(battlefield.flags_left, 0);
+            assert_eq!(cell0.state, CellState::Flagged);
+            assert_eq!(cell1.state, CellState::Flagged);
+            assert_eq!(cell2.state, CellState::Hidden);
+        }
+
+        #[test]
+        fn should_unflag_already_flagged_cells() {
+            let map = vec![vec![
+                Cell {
+                    id: 0,
+                    state: CellState::Hidden,
+                    ctype: CellType::Empty(0),
+                    position: CellPosition { x: 0, y: 0 },
+                },
+                Cell {
+                    id: 1,
+                    state: CellState::Hidden,
+                    ctype: CellType::Mine,
+                    position: CellPosition { x: 0, y: 0 },
+                },
+                Cell {
+                    id: 2,
+                    state: CellState::Hidden,
+                    ctype: CellType::Mine,
+                    position: CellPosition { x: 0, y: 0 },
+                },
+            ]];
+            let mut battlefield = BattleField::with_map(map);
+
+            assert_eq!(battlefield.flags_left, 2);
+            let cell0 = battlefield.flag(0);
+            assert_eq!(battlefield.flags_left, 1);
+            assert_eq!(cell0.state, CellState::Flagged);
+
+            let cell1 = battlefield.flag(1);
+            assert_eq!(battlefield.flags_left, 0);
+            assert_eq!(cell1.state, CellState::Flagged);
+
+            // Should NOT flag the cell by `cell_id: 2`
+            let cell2 = battlefield.flag(2);
+            assert_eq!(cell2.state, CellState::Hidden);
+            assert_eq!(battlefield.flags_left, 0);
+
+            // Should unflag the cell by `cell_id: 0`
+            let cell0 = battlefield.flag(0);
+            assert_eq!(cell0.state, CellState::Hidden);
+            assert_eq!(battlefield.flags_left, 1);
+
+            // Should unflag the cell by `cell_id: 1`
+            let cell1 = battlefield.flag(1);
+            assert_eq!(cell1.state, CellState::Hidden);
+            assert_eq!(battlefield.flags_left, 2);
+
+            // Should flag the cell by `cell_id: 2`
+            let cell2 = battlefield.flag(2);
+            assert_eq!(cell2.state, CellState::Flagged);
+            assert_eq!(battlefield.flags_left, 1);
         }
     }
 }

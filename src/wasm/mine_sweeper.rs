@@ -47,7 +47,7 @@ impl MineSweeperEngine {
     ///  rows and columns
     pub fn create(rows: u16, cols: u16, bombs: u16) -> Self {
         let battlefield = BattleField::new(rows as usize, cols as usize, bombs);
-        let flgs = battlefield.max_flag_values;
+        let flgs = battlefield.flags_left;
 
         Self {
             battlefield,
@@ -87,7 +87,7 @@ impl MineSweeperEngine {
     pub fn flag(&mut self, cell_id: CellId) -> JsValue {
         let cell = self.battlefield.flag(cell_id);
 
-        self.game_state.flags = self.battlefield.max_flag_values;
+        self.game_state.flags = self.battlefield.flags_left;
         self.convert_cell_into_wasm(&cell)
     }
 

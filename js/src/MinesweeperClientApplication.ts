@@ -115,7 +115,7 @@ export class MinesweeperClientApplication {
                 });
                 visual.render();
             } else {
-                const cells: ReadonlyArray<WasmCell> =
+                const cells: ReadonlyArray<Readonly<WasmCell>> =
                     this.minesweeperEngine.reveal(entityId);
 
                 cells.forEach(cell => {
@@ -133,14 +133,17 @@ export class MinesweeperClientApplication {
             const gameState = this.minesweeperEngine.getGameState();
             this.gameState = gameState;
 
-            console.log('this.minesweeperEngine.getGameState(): ', gameState);
-
             if (gameState.status === GameStatus.Lose) {
                 alert('Game is over');
                 console.warn('Game is over');
             } else if (gameState.status === GameStatus.Won) {
                 alert('Game won');
                 console.info('Game won');
+            }
+
+            const $flags = document.querySelector('.flags_count');
+            if ($flags) {
+                $flags.textContent = String(this.gameState.flags);
             }
         });
     }
@@ -160,6 +163,15 @@ export class MinesweeperClientApplication {
 
         this.minesweeperEngine = MineSweeperEngine.create(rows, cols, bombs);
         this.generateField(this.minesweeperEngine.getField());
+
+        const $flags = document.querySelector('.flags_count');
+
+        const gameState = this.minesweeperEngine.getGameState();
+        this.gameState = gameState;
+
+        if ($flags) {
+            $flags.textContent = String(gameState.flags);
+        }
 
         return this.application.view;
     }
