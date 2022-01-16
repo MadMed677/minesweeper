@@ -202,7 +202,7 @@ impl BattleField {
 
     /// Flag the cell by provided `CellId` and
     ///  returns the Cell
-    pub fn flag(&mut self, cell_id: CellId) -> Cell {
+    pub fn flag(&mut self, cell_id: CellId) -> &Cell {
         let cell = self.get(cell_id);
         let is_flagged = cell.state == CellState::Flagged;
 
@@ -214,7 +214,7 @@ impl BattleField {
             let cell = self.get_mut(cell_id);
             cell.flag();
 
-            *cell
+            cell
         } else {
             // User wants to flag the cell
             //  we have to check if is it possible or not
@@ -223,14 +223,14 @@ impl BattleField {
             if self.flags_left == 0 {
                 let cell = self.get_mut(cell_id);
 
-                *cell
+                cell
             } else {
                 self.flags_left -= 1;
 
                 let cell = self.get_mut(cell_id);
                 cell.flag();
 
-                *cell
+                cell
             }
         }
     }
@@ -735,7 +735,7 @@ mod battlefield_test {
 
             assert_eq!(
                 cell,
-                Cell {
+                &Cell {
                     id: 0,
                     ctype: CellType::Empty(0),
                     state: CellState::Flagged,
@@ -758,7 +758,7 @@ mod battlefield_test {
 
             assert_eq!(
                 cell,
-                Cell {
+                &Cell {
                     id: 0,
                     state: CellState::Revealed,
                     ctype: CellType::Empty(0),
@@ -781,7 +781,7 @@ mod battlefield_test {
 
             assert_eq!(
                 cell,
-                Cell {
+                &Cell {
                     id: 0,
                     state: CellState::Hidden,
                     ctype: CellType::Empty(0),
@@ -846,13 +846,15 @@ mod battlefield_test {
             let mut battlefield = BattleField::with_map(map);
 
             let cell0 = battlefield.flag(0);
+            assert_eq!(cell0.state, CellState::Flagged);
+
             let cell1 = battlefield.flag(1);
+            assert_eq!(cell1.state, CellState::Flagged);
+
             let cell2 = battlefield.flag(2);
+            assert_eq!(cell2.state, CellState::Hidden);
 
             assert_eq!(battlefield.flags_left, 0);
-            assert_eq!(cell0.state, CellState::Flagged);
-            assert_eq!(cell1.state, CellState::Flagged);
-            assert_eq!(cell2.state, CellState::Hidden);
         }
 
         #[test]
@@ -881,12 +883,12 @@ mod battlefield_test {
 
             assert_eq!(battlefield.flags_left, 2);
             let cell0 = battlefield.flag(0);
-            assert_eq!(battlefield.flags_left, 1);
             assert_eq!(cell0.state, CellState::Flagged);
+            assert_eq!(battlefield.flags_left, 1);
 
             let cell1 = battlefield.flag(1);
-            assert_eq!(battlefield.flags_left, 0);
             assert_eq!(cell1.state, CellState::Flagged);
+            assert_eq!(battlefield.flags_left, 0);
 
             // Should NOT flag the cell by `cell_id: 2`
             let cell2 = battlefield.flag(2);

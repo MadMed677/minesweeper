@@ -86,9 +86,11 @@ impl MineSweeperEngine {
 
     pub fn flag(&mut self, cell_id: CellId) -> JsValue {
         let cell = self.battlefield.flag(cell_id);
+        let cp_cell = *cell;
 
         self.game_state.flags = self.battlefield.flags_left;
-        self.convert_cell_into_wasm(&cell)
+
+        self.convert_cell_into_wasm(&cp_cell)
     }
 
     /// Returns a game state of the game
