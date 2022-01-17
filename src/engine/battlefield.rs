@@ -128,6 +128,8 @@ impl BattleField {
     }
 
     /// Creates a battlefield with provided map
+    ///  works only for `test` scenario
+    #[cfg(test)]
     fn with_map(map: BattlefieldMap) -> Self {
         let bombs_count = map.iter().fold(0, |outer_acc, row| {
             outer_acc
@@ -221,9 +223,7 @@ impl BattleField {
 
             // We can't flag the cell
             if self.flags_left == 0 {
-                let cell = self.get_mut(cell_id);
-
-                cell
+                self.get_mut(cell_id)
             } else {
                 self.flags_left -= 1;
 

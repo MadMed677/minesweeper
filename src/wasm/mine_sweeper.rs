@@ -14,7 +14,7 @@ pub struct GameState {
 #[derive(Copy, Clone)]
 pub enum GameStatus {
     /// Signals to the player that the game is going
-    Play,
+    Played,
 
     /// Signals to the player that the game has ended and the user is lost
     Lose,
@@ -52,7 +52,7 @@ impl MineSweeperEngine {
         Self {
             battlefield,
             game_state: GameState {
-                status: GameStatus::Play,
+                status: GameStatus::Played,
                 flags: flgs,
             },
             elements_to_win_the_game: (rows * cols - bombs) as i16,
