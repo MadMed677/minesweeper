@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"sourceRoot": "./js",
 		"outDir": "./dist/",
 		"target": "ES6",
 		"lib": [
