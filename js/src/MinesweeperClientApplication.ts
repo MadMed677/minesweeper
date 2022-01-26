@@ -33,8 +33,6 @@ export class MinesweeperClientApplication {
     /** When all textures were loaded set it is as `true` */
     private isTexturesLoaded = false;
 
-    private gameState: GameState | undefined;
-
     /**
      * Load all textures and executes `callback` when all textures
      *  being loaded
@@ -112,7 +110,6 @@ export class MinesweeperClientApplication {
         const $flags = document.querySelector('.flags_count');
 
         const gameState = this.minesweeperEngine.getGameState();
-        this.gameState = gameState;
 
         if ($flags) {
             $flags.textContent = String(gameState.flags);
@@ -207,8 +204,6 @@ export class MinesweeperClientApplication {
      *  - count of flags on the board
      */
     private onStateChanged = (gameState: GameState): void => {
-        this.gameState = gameState;
-
         if (gameState.status === GameStatus.Lose) {
             alert('Game is over');
             console.warn('Game is over');
@@ -219,7 +214,7 @@ export class MinesweeperClientApplication {
 
         const $flags = document.querySelector('.flags_count');
         if ($flags) {
-            $flags.textContent = String(this.gameState.flags);
+            $flags.textContent = String(gameState.flags);
         }
     };
 }
