@@ -89,63 +89,7 @@ export class MinesweeperClientApplication {
         this.interactionManager = this.application.renderer.plugins
             .interaction as PIXI.InteractionManager;
 
-        this.interactionManager.on('pointerup', (e: PIXI.InteractionEvent) => {
-            /**
-             * Assumes that if user uses `altKey` it means that
-             *  user wants to flag the field
-             */
-            const isFlaggedEvent = e.data.originalEvent.altKey;
-            const entityId = Number(e.target?.name);
-
-            if (typeof entityId !== 'number' || isNaN(entityId)) {
-                return;
-            }
-
-            if (isFlaggedEvent) {
-                const cell: Readonly<WasmCell> =
-                    this.minesweeperEngine.flag(entityId);
-
-                const visual = this.mapState.get(cell.id);
-                if (!visual) {
-                    throw new Error(`Cannot find visual by id: ${cell.id}`);
-                }
-
-                visual.setProps({
-                    status: cell.status,
-                });
-                visual.render();
-            } else {
-                const cells: ReadonlyArray<Readonly<WasmCell>> =
-                    this.minesweeperEngine.reveal(entityId);
-
-                cells.forEach(cell => {
-                    const visual = this.mapState.get(cell.id);
-
-                    if (!visual) {
-                        throw new Error(`Cannot find visual by id: ${cell.id}`);
-                    }
-
-                    visual.setProps({status: cell.status});
-                    visual.render();
-                });
-            }
-
-            const gameState = this.minesweeperEngine.getGameState();
-            this.gameState = gameState;
-
-            if (gameState.status === GameStatus.Lose) {
-                alert('Game is over');
-                console.warn('Game is over');
-            } else if (gameState.status === GameStatus.Won) {
-                alert('Game won');
-                console.info('Game won');
-            }
-
-            const $flags = document.querySelector('.flags_count');
-            if ($flags) {
-                $flags.textContent = String(this.gameState.flags);
-            }
-        });
+        this.interactionManager.on('pointerup', this.onCellClick);
     }
 
     /** Creates a canvas for the battlefield */
@@ -162,6 +106,7 @@ export class MinesweeperClientApplication {
         await this.loadAllTextures();
 
         this.minesweeperEngine = MineSweeperEngine.create(rows, cols, bombs);
+        this.minesweeperEngine.onChange(this.onStateChanged);
         this.generateField(this.minesweeperEngine.getField());
 
         const $flags = document.querySelector('.flags_count');
@@ -208,4 +153,73 @@ export class MinesweeperClientApplication {
             });
         });
     }
+
+    /**
+     * Fires when user click / touch no the specific cell
+     * Accepts Pixi.InteractionEvent
+     */
+    private onCellClick = (e: PIXI.InteractionEvent): void => {
+        /**
+         * Assumes that if user uses `altKey` it means that
+         *  user wants to flag the field
+         */
+        const isFlaggedEvent = e.data.originalEvent.altKey;
+        const entityId = Number(e.target?.name);
+
+        if (typeof entityId !== 'number' || isNaN(entityId)) {
+            return;
+        }
+
+        if (isFlaggedEvent) {
+            const cell: Readonly<WasmCell> =
+                this.minesweeperEngine.flag(entityId);
+
+            const visual = this.mapState.get(cell.id);
+            if (!visual) {
+                throw new Error(`Cannot find visual by id: ${cell.id}`);
+            }
+
+            visual.setProps({
+                status: cell.status,
+            });
+            visual.render();
+        } else {
+            const cells: ReadonlyArray<Readonly<WasmCell>> =
+                this.minesweeperEngine.reveal(entityId);
+
+            cells.forEach(cell => {
+                const visual = this.mapState.get(cell.id);
+
+                if (!visual) {
+                    throw new Error(`Cannot find visual by id: ${cell.id}`);
+                }
+
+                visual.setProps({status: cell.status});
+                visual.render();
+            });
+        }
+    };
+
+    /**
+     * Fires when the game state has been changed
+     *  and we need to update:
+     *  - game status
+     *  - count of flags on the board
+     */
+    private onStateChanged = (gameState: GameState): void => {
+        this.gameState = gameState;
+
+        if (gameState.status === GameStatus.Lose) {
+            alert('Game is over');
+            console.warn('Game is over');
+        } else if (gameState.status === GameStatus.Won) {
+            alert('Game won');
+            console.info('Game won');
+        }
+
+        const $flags = document.querySelector('.flags_count');
+        if ($flags) {
+            $flags.textContent = String(this.gameState.flags);
+        }
+    };
 }

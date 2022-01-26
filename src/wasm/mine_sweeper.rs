@@ -39,6 +39,8 @@ pub struct MineSweeperEngine {
 
     /// How many cells already revealed
     revealed_elements: i16,
+
+    on_change: Option<js_sys::Function>,
 }
 
 #[wasm_bindgen]
@@ -57,6 +59,7 @@ impl MineSweeperEngine {
             },
             elements_to_win_the_game: (rows * cols - bombs) as i16,
             revealed_elements: 0,
+            on_change: None,
         }
     }
 
@@ -81,6 +84,13 @@ impl MineSweeperEngine {
             self.game_state.status = GameStatus::Won;
         }
 
+        if let Some(callback) = &self.on_change {
+            let this = JsValue::null();
+            let wasm_provided = JsValue::from(self.game_state);
+
+            let _ = callback.call1(&this, &wasm_provided);
+        }
+
         cells
     }
 
@@ -89,6 +99,15 @@ impl MineSweeperEngine {
         let cp_cell = *cell;
 
         self.game_state.flags = self.battlefield.flags_left;
+
+        // Triggers `on_change` callback when
+        //  count of flags has been changed
+        if let Some(callback) = &self.on_change {
+            let this = JsValue::null();
+            let wasm_provided = JsValue::from(self.game_state);
+
+            let _ = callback.call1(&this, &wasm_provided);
+        }
 
         self.convert_cell_into_wasm(&cp_cell)
     }
@@ -113,6 +132,16 @@ impl MineSweeperEngine {
                     .collect::<js_sys::Array>()
             })
             .collect()
+    }
+
+    /// Method that can be subscribed to in the Public API
+    ///  that signals that the state of the application
+    ///  has been changed
+    ///
+    /// The solution was based on the [StackOverflow example](https://stackoverflow.com/a/53685611)
+    #[wasm_bindgen(js_name = onChange)]
+    pub fn on_change(&mut self, callback: js_sys::Function) {
+        self.on_change = Some(callback);
     }
 
     /// Converts Battlefield Cell into WasmCell structure
