@@ -40,6 +40,9 @@ pub struct MineSweeperEngine {
     /// How many cells already revealed
     revealed_elements: i16,
 
+    /// A public subsciption that we have to trigger
+    ///  if the client want to know if game state
+    ///  has been changed
     on_change: Option<js_sys::Function>,
 }
 
@@ -84,12 +87,7 @@ impl MineSweeperEngine {
             self.game_state.status = GameStatus::Won;
         }
 
-        if let Some(callback) = &self.on_change {
-            let this = JsValue::null();
-            let wasm_provided = JsValue::from(self.game_state);
-
-            let _ = callback.call1(&this, &wasm_provided);
-        }
+        self.on_game_changed(&self.game_state);
 
         cells
     }
@@ -99,15 +97,7 @@ impl MineSweeperEngine {
         let cp_cell = *cell;
 
         self.game_state.flags = self.battlefield.flags_left;
-
-        // Triggers `on_change` callback when
-        //  count of flags has been changed
-        if let Some(callback) = &self.on_change {
-            let this = JsValue::null();
-            let wasm_provided = JsValue::from(self.game_state);
-
-            let _ = callback.call1(&this, &wasm_provided);
-        }
+        self.on_game_changed(&self.game_state);
 
         self.convert_cell_into_wasm(&cp_cell)
     }
@@ -142,6 +132,17 @@ impl MineSweeperEngine {
     #[wasm_bindgen(js_name = onChange)]
     pub fn on_change(&mut self, callback: js_sys::Function) {
         self.on_change = Some(callback);
+    }
+
+    /// Fires when game was changed
+    /// Internal method which called public `on_change` event
+    fn on_game_changed(&self, game_state: &GameState) {
+        if let Some(callback) = &self.on_change {
+            let this = JsValue::null();
+            let wasm_data = JsValue::from(*game_state);
+
+            let _ = callback.call1(&this, &wasm_data);
+        }
     }
 
     /// Converts Battlefield Cell into WasmCell structure
