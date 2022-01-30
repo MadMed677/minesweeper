@@ -1,0 +1,40 @@
+:root {
+    --background-color--default: #BDC3C7;
+
+    --text-color--default: #000;
+    --text-color--primary: #F1C40F;
+    --text-color--accent: #FFF;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color--default: #2C3E50;
+
+        --text-color--default: #fff;
+        --text-color--primary: #fff;
+        --text-color--accent: #fff;
+    }
+}
+
+body {
+    margin: 0;
+    color: var(--text-color--default);
+    background-color: var(--background-color--default);
+}
+
+button {
+    color: var(--text-color--default);
+    background-color: var(--background-color--default);
+}
+
+.root-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.hidden {
+    display: none;
+}
+
