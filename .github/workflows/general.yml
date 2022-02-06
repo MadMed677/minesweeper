@@ -1,4 +1,4 @@
-name: Rust
+name: Engine (Rust)
 
 on:
   push:
@@ -69,3 +69,18 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: -- -D warnings
+
+  coverage:
+    name: Code coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          components: clippy
+          toolchain: stable
+          override: true
+      - name: Run Coverage
+        uses: actions-rs/tarpaulin@v0.1
+        with:
+          args: '--ignore-tests --avoid-cfg-tarpaulin'
