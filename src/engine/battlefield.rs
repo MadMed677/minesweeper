@@ -386,489 +386,143 @@ fn should_not_return_cell_by_specify_position_because_it_is_out_of_bounce() {
     }
 }
 
-mod event_logic {
-    use crate::engine::*;
+#[test]
+fn should_reveal_all_cells_if_none_bombs_were_found() {
+    // |0, 0, 0|
+    // |0, 0, 0|
+    // |0, 0, 0|
+    let map = vec![
+        vec![
+            Cell::new(0, CellType::Empty(0), CellPosition { x: 0, y: 0 }),
+            Cell::new(1, CellType::Empty(0), CellPosition { x: 0, y: 1 }),
+            Cell::new(2, CellType::Empty(0), CellPosition { x: 0, y: 2 }),
+        ],
+        vec![
+            Cell::new(3, CellType::Empty(0), CellPosition { x: 1, y: 0 }),
+            Cell::new(4, CellType::Empty(0), CellPosition { x: 1, y: 1 }),
+            Cell::new(5, CellType::Empty(0), CellPosition { x: 1, y: 2 }),
+        ],
+        vec![
+            Cell::new(6, CellType::Empty(0), CellPosition { x: 2, y: 0 }),
+            Cell::new(7, CellType::Empty(0), CellPosition { x: 2, y: 1 }),
+            Cell::new(8, CellType::Empty(0), CellPosition { x: 2, y: 2 }),
+        ],
+    ];
+    let mut battlefield = BattleField::with_map(map);
 
-    #[test]
-    fn should_reveal_all_cells_if_none_bombs_were_found() {
-        // |0, 0, 0|
-        // |0, 0, 0|
-        // |0, 0, 0|
-        let map = vec![
-            vec![
-                Cell::new(0, CellType::Empty(0), CellPosition { x: 0, y: 0 }),
-                Cell::new(1, CellType::Empty(0), CellPosition { x: 0, y: 1 }),
-                Cell::new(2, CellType::Empty(0), CellPosition { x: 0, y: 2 }),
-            ],
-            vec![
-                Cell::new(3, CellType::Empty(0), CellPosition { x: 1, y: 0 }),
-                Cell::new(4, CellType::Empty(0), CellPosition { x: 1, y: 1 }),
-                Cell::new(5, CellType::Empty(0), CellPosition { x: 1, y: 2 }),
-            ],
-            vec![
-                Cell::new(6, CellType::Empty(0), CellPosition { x: 2, y: 0 }),
-                Cell::new(7, CellType::Empty(0), CellPosition { x: 2, y: 1 }),
-                Cell::new(8, CellType::Empty(0), CellPosition { x: 2, y: 2 }),
-            ],
-        ];
-        let mut battlefield = BattleField::with_map(map);
+    // Start reveal from the top-left cell
+    //  it should affect all cells and at
+    //  the end all 9 cells must be revealed
+    let revealed = battlefield.reveal(0);
+    let revealed_cells_state = revealed
+        .cells
+        .iter()
+        .map(|cell| cell.state)
+        .collect::<Vec<CellState>>();
 
-        // Start reveal from the top-left cell
-        //  it should affect all cells and at
-        //  the end all 9 cells must be revealed
-        let revealed = battlefield.reveal(0);
-        let revealed_cells_state = revealed
-            .cells
-            .iter()
-            .map(|cell| cell.state)
-            .collect::<Vec<CellState>>();
+    assert_eq!(
+        revealed_cells_state,
+        vec![
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed
+        ]
+    );
+}
 
-        assert_eq!(
-            revealed_cells_state,
-            vec![
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed
-            ]
-        );
-    }
-
-    #[test]
-    fn should_reveal_and_return_only_unrevealed_elements() {
-        // |0, 0, 1|
-        // |0, 0, 1|
-        // |1, 1, 1|
-        let map = vec![
-            vec![
-                Cell::new(0, CellType::Empty(0), CellPosition { x: 0, y: 0 }),
-                Cell::new(1, CellType::Empty(0), CellPosition { x: 0, y: 1 }),
-                Cell {
-                    id: 2,
-                    state: CellState::Revealed,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 0, y: 2 },
-                },
-            ],
-            vec![
-                Cell::new(3, CellType::Empty(0), CellPosition { x: 1, y: 0 }),
-                Cell::new(4, CellType::Empty(0), CellPosition { x: 1, y: 1 }),
-                Cell {
-                    id: 5,
-                    state: CellState::Revealed,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 1, y: 2 },
-                },
-            ],
-            vec![
-                Cell {
-                    id: 6,
-                    state: CellState::Revealed,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 2, y: 0 },
-                },
-                Cell {
-                    id: 7,
-                    state: CellState::Revealed,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 2, y: 1 },
-                },
-                Cell {
-                    id: 8,
-                    state: CellState::Revealed,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 2, y: 2 },
-                },
-            ],
-        ];
-        let mut battlefield = BattleField::with_map(map);
-
-        // Start reveal from the top-left cell
-        //  it should affect all cells and at
-        //  the end all 9 cells must be revealed
-        let revealed = battlefield.reveal(0);
-        let revealed_cells_state = revealed
-            .cells
-            .iter()
-            .map(|cell| cell.state)
-            .collect::<Vec<CellState>>();
-
-        let revealed_cells_id = revealed
-            .cells
-            .iter()
-            .map(|cell| cell.id)
-            .collect::<Vec<CellId>>();
-
-        // Only 4 should have `Revealed` state
-        assert_eq!(
-            revealed_cells_state,
-            vec![
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-            ]
-        );
-
-        // Only specific 4 cell should be uncovered
-        assert_eq!(revealed_cells_id, vec![0, 1, 3, 4]);
-    }
-
-    #[test]
-    fn should_reveal_cells_and_not_take_the_bomb() {
-        // |0, 0, 0|
-        // |0, 1, 1|
-        // |0, 1, b|
-        let map = vec![
-            vec![
-                Cell {
-                    id: 0,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 0, y: 0 },
-                },
-                Cell {
-                    id: 1,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 0, y: 1 },
-                },
-                Cell {
-                    id: 2,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(1),
-                    position: CellPosition { x: 0, y: 2 },
-                },
-            ],
-            vec![
-                Cell {
-                    id: 3,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 1, y: 0 },
-                },
-                Cell {
-                    id: 4,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 1, y: 1 },
-                },
-                Cell {
-                    id: 5,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(1),
-                    position: CellPosition { x: 1, y: 2 },
-                },
-            ],
-            vec![
-                Cell {
-                    id: 6,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 2, y: 0 },
-                },
-                Cell {
-                    id: 7,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 2, y: 1 },
-                },
-                Cell {
-                    id: 8,
-                    state: CellState::Hidden,
-                    ctype: CellType::Mine,
-                    position: CellPosition { x: 2, y: 2 },
-                },
-            ],
-        ];
-        let mut battlefield = BattleField::with_map(map);
-
-        // Start reveal from the top-left cell
-        //  it should affect all cells and at
-        //  the end all 9 cells must be revealed
-        let revealed = battlefield.reveal(0);
-        let revealed_cells_state = revealed
-            .cells
-            .iter()
-            .map(|cell| cell.state)
-            .collect::<Vec<CellState>>();
-
-        let revealed_cells_id = revealed
-            .cells
-            .iter()
-            .map(|cell| cell.id)
-            .collect::<Vec<CellId>>();
-
-        assert_eq!(
-            revealed_cells_state,
-            vec![
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-            ]
-        );
-        assert_eq!(revealed_cells_id, vec![0, 1, 2, 3, 4, 5, 6, 7]);
-    }
-
-    #[test]
-    fn should_reveal_all_elements_if_user_select_the_bomb() {
-        // |0, 0, 0|
-        // |0, 1, 1|
-        // |0, 1, b|
-        let map = vec![
-            vec![
-                Cell {
-                    id: 0,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 0, y: 0 },
-                },
-                Cell {
-                    id: 1,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 0, y: 1 },
-                },
-                Cell {
-                    id: 2,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(1),
-                    position: CellPosition { x: 0, y: 2 },
-                },
-            ],
-            vec![
-                Cell {
-                    id: 3,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 1, y: 0 },
-                },
-                Cell {
-                    id: 4,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 1, y: 1 },
-                },
-                Cell {
-                    id: 5,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(1),
-                    position: CellPosition { x: 1, y: 2 },
-                },
-            ],
-            vec![
-                Cell {
-                    id: 6,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 2, y: 0 },
-                },
-                Cell {
-                    id: 7,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 2, y: 1 },
-                },
-                Cell {
-                    id: 8,
-                    state: CellState::Hidden,
-                    ctype: CellType::Mine,
-                    position: CellPosition { x: 2, y: 2 },
-                },
-            ],
-        ];
-        let mut battlefield = BattleField::with_map(map);
-
-        // Start reveal the bomb's id
-        let revealed = battlefield.reveal(8);
-        let revealed_cells_state = revealed
-            .cells
-            .iter()
-            .map(|cell| cell.state)
-            .collect::<Vec<CellState>>();
-
-        let mut revealed_cells_id = revealed
-            .cells
-            .iter()
-            .map(|cell| cell.id)
-            .collect::<Vec<CellId>>();
-
-        revealed_cells_id.sort_unstable();
-
-        assert_eq!(
-            revealed_cells_state,
-            vec![
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-                CellState::Revealed,
-            ]
-        );
-        assert_eq!(revealed_cells_id, vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
-    }
-
-    #[test]
-    fn should_flag_the_cell() {
-        let map = vec![vec![
+#[test]
+fn should_reveal_and_return_only_unrevealed_elements() {
+    // |0, 0, 1|
+    // |0, 0, 1|
+    // |1, 1, 1|
+    let map = vec![
+        vec![
+            Cell::new(0, CellType::Empty(0), CellPosition { x: 0, y: 0 }),
+            Cell::new(1, CellType::Empty(0), CellPosition { x: 0, y: 1 }),
             Cell {
-                id: 0,
-                state: CellState::Hidden,
-                ctype: CellType::Empty(0),
-                position: CellPosition { x: 0, y: 0 },
-            },
-            Cell {
-                id: 1,
-                state: CellState::Hidden,
-                ctype: CellType::Mine,
-                position: CellPosition { x: 0, y: 0 },
-            },
-        ]];
-        let mut battlefield = BattleField::with_map(map);
-
-        let cell = battlefield.flag(0);
-
-        assert_eq!(
-            cell,
-            &Cell {
-                id: 0,
-                ctype: CellType::Empty(0),
-                state: CellState::Flagged,
-                position: CellPosition { x: 0, y: 0 }
-            }
-        );
-    }
-
-    #[test]
-    fn should_not_flag_the_cell_if_it_is_revealed() {
-        let map = vec![vec![Cell {
-            id: 0,
-            state: CellState::Revealed,
-            ctype: CellType::Empty(0),
-            position: CellPosition { x: 0, y: 0 },
-        }]];
-        let mut battlefield = BattleField::with_map(map);
-
-        let cell = battlefield.flag(0);
-
-        assert_eq!(
-            cell,
-            &Cell {
-                id: 0,
+                id: 2,
                 state: CellState::Revealed,
                 ctype: CellType::Empty(0),
-                position: CellPosition { x: 0, y: 0 }
-            }
-        );
-    }
-
-    #[test]
-    fn should_unflag_the_cell_if_it_is_flagged() {
-        let map = vec![vec![Cell {
-            id: 0,
-            state: CellState::Flagged,
-            ctype: CellType::Empty(0),
-            position: CellPosition { x: 0, y: 0 },
-        }]];
-        let mut battlefield = BattleField::with_map(map);
-
-        let cell = battlefield.flag(0);
-
-        assert_eq!(
-            cell,
-            &Cell {
-                id: 0,
-                state: CellState::Hidden,
+                position: CellPosition { x: 0, y: 2 },
+            },
+        ],
+        vec![
+            Cell::new(3, CellType::Empty(0), CellPosition { x: 1, y: 0 }),
+            Cell::new(4, CellType::Empty(0), CellPosition { x: 1, y: 1 }),
+            Cell {
+                id: 5,
+                state: CellState::Revealed,
                 ctype: CellType::Empty(0),
-                position: CellPosition { x: 0, y: 0 }
-            }
-        );
-    }
-
-    #[test]
-    fn should_build_correct_max_flag_values_counter() {
-        let map = vec![vec![
+                position: CellPosition { x: 1, y: 2 },
+            },
+        ],
+        vec![
             Cell {
-                id: 0,
-                state: CellState::Hidden,
+                id: 6,
+                state: CellState::Revealed,
                 ctype: CellType::Empty(0),
-                position: CellPosition { x: 0, y: 0 },
+                position: CellPosition { x: 2, y: 0 },
             },
             Cell {
-                id: 1,
-                state: CellState::Hidden,
-                ctype: CellType::Mine,
-                position: CellPosition { x: 0, y: 0 },
-            },
-            Cell {
-                id: 2,
-                state: CellState::Hidden,
-                ctype: CellType::Mine,
-                position: CellPosition { x: 0, y: 0 },
-            },
-        ]];
-        let mut battlefield = BattleField::with_map(map);
-
-        assert_eq!(battlefield.flags_left, 2);
-
-        battlefield.flag(0);
-
-        assert_eq!(battlefield.flags_left, 1);
-    }
-
-    #[test]
-    fn should_not_set_more_flags_that_is_possible() {
-        let map = vec![vec![
-            Cell {
-                id: 0,
-                state: CellState::Hidden,
+                id: 7,
+                state: CellState::Revealed,
                 ctype: CellType::Empty(0),
-                position: CellPosition { x: 0, y: 0 },
+                position: CellPosition { x: 2, y: 1 },
             },
             Cell {
-                id: 1,
-                state: CellState::Hidden,
-                ctype: CellType::Mine,
-                position: CellPosition { x: 0, y: 0 },
+                id: 8,
+                state: CellState::Revealed,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 2, y: 2 },
             },
-            Cell {
-                id: 2,
-                state: CellState::Hidden,
-                ctype: CellType::Mine,
-                position: CellPosition { x: 0, y: 0 },
-            },
-        ]];
-        let mut battlefield = BattleField::with_map(map);
+        ],
+    ];
+    let mut battlefield = BattleField::with_map(map);
 
-        let cell0 = battlefield.flag(0);
-        assert_eq!(cell0.state, CellState::Flagged);
+    // Start reveal from the top-left cell
+    //  it should affect all cells and at
+    //  the end all 9 cells must be revealed
+    let revealed = battlefield.reveal(0);
+    let revealed_cells_state = revealed
+        .cells
+        .iter()
+        .map(|cell| cell.state)
+        .collect::<Vec<CellState>>();
 
-        let cell1 = battlefield.flag(1);
-        assert_eq!(cell1.state, CellState::Flagged);
+    let revealed_cells_id = revealed
+        .cells
+        .iter()
+        .map(|cell| cell.id)
+        .collect::<Vec<CellId>>();
 
-        let cell2 = battlefield.flag(2);
-        assert_eq!(cell2.state, CellState::Hidden);
+    // Only 4 should have `Revealed` state
+    assert_eq!(
+        revealed_cells_state,
+        vec![
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+        ]
+    );
 
-        assert_eq!(battlefield.flags_left, 0);
-    }
+    // Only specific 4 cell should be uncovered
+    assert_eq!(revealed_cells_id, vec![0, 1, 3, 4]);
+}
 
-    #[test]
-    fn should_unflag_already_flagged_cells() {
-        let map = vec![vec![
+#[test]
+fn should_reveal_cells_and_not_take_the_bomb() {
+    // |0, 0, 0|
+    // |0, 1, 1|
+    // |0, 1, b|
+    let map = vec![
+        vec![
             Cell {
                 id: 0,
                 state: CellState::Hidden,
@@ -878,90 +532,432 @@ mod event_logic {
             Cell {
                 id: 1,
                 state: CellState::Hidden,
-                ctype: CellType::Mine,
-                position: CellPosition { x: 0, y: 0 },
-            },
-            Cell {
-                id: 2,
-                state: CellState::Hidden,
-                ctype: CellType::Mine,
-                position: CellPosition { x: 0, y: 0 },
-            },
-        ]];
-        let mut battlefield = BattleField::with_map(map);
-
-        assert_eq!(battlefield.flags_left, 2);
-        let cell0 = battlefield.flag(0);
-        assert_eq!(cell0.state, CellState::Flagged);
-        assert_eq!(battlefield.flags_left, 1);
-
-        let cell1 = battlefield.flag(1);
-        assert_eq!(cell1.state, CellState::Flagged);
-        assert_eq!(battlefield.flags_left, 0);
-
-        // Should NOT flag the cell by `cell_id: 2`
-        let cell2 = battlefield.flag(2);
-        assert_eq!(cell2.state, CellState::Hidden);
-        assert_eq!(battlefield.flags_left, 0);
-
-        // Should unflag the cell by `cell_id: 0`
-        let cell0 = battlefield.flag(0);
-        assert_eq!(cell0.state, CellState::Hidden);
-        assert_eq!(battlefield.flags_left, 1);
-
-        // Should unflag the cell by `cell_id: 1`
-        let cell1 = battlefield.flag(1);
-        assert_eq!(cell1.state, CellState::Hidden);
-        assert_eq!(battlefield.flags_left, 2);
-
-        // Should flag the cell by `cell_id: 2`
-        let cell2 = battlefield.flag(2);
-        assert_eq!(cell2.state, CellState::Flagged);
-        assert_eq!(battlefield.flags_left, 1);
-    }
-
-    #[test]
-    fn should_have_actual_state_value_when_reveal_flagged_cell() {
-        let map = vec![vec![
-            Cell {
-                id: 0,
-                state: CellState::Hidden,
                 ctype: CellType::Empty(0),
-                position: CellPosition { x: 0, y: 0 },
-            },
-            Cell {
-                id: 1,
-                state: CellState::Hidden,
-                ctype: CellType::Mine,
                 position: CellPosition { x: 0, y: 1 },
             },
             Cell {
                 id: 2,
                 state: CellState::Hidden,
-                ctype: CellType::Mine,
+                ctype: CellType::Empty(1),
                 position: CellPosition { x: 0, y: 2 },
             },
+        ],
+        vec![
             Cell {
                 id: 3,
                 state: CellState::Hidden,
-                ctype: CellType::Mine,
-                position: CellPosition { x: 0, y: 3 },
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 1, y: 0 },
             },
-        ]];
+            Cell {
+                id: 4,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 1, y: 1 },
+            },
+            Cell {
+                id: 5,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(1),
+                position: CellPosition { x: 1, y: 2 },
+            },
+        ],
+        vec![
+            Cell {
+                id: 6,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 2, y: 0 },
+            },
+            Cell {
+                id: 7,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 2, y: 1 },
+            },
+            Cell {
+                id: 8,
+                state: CellState::Hidden,
+                ctype: CellType::Mine,
+                position: CellPosition { x: 2, y: 2 },
+            },
+        ],
+    ];
+    let mut battlefield = BattleField::with_map(map);
 
-        let mut battlefield = BattleField::with_map(map);
+    // Start reveal from the top-left cell
+    //  it should affect all cells and at
+    //  the end all 9 cells must be revealed
+    let revealed = battlefield.reveal(0);
+    let revealed_cells_state = revealed
+        .cells
+        .iter()
+        .map(|cell| cell.state)
+        .collect::<Vec<CellState>>();
 
-        assert_eq!(battlefield.flags_left, 3);
+    let revealed_cells_id = revealed
+        .cells
+        .iter()
+        .map(|cell| cell.id)
+        .collect::<Vec<CellId>>();
 
-        // Flag two cells
-        battlefield.flag(0);
-        battlefield.flag(1);
+    assert_eq!(
+        revealed_cells_state,
+        vec![
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+        ]
+    );
+    assert_eq!(revealed_cells_id, vec![0, 1, 2, 3, 4, 5, 6, 7]);
+}
 
-        assert_eq!(battlefield.flags_left, 1);
+#[test]
+fn should_reveal_all_elements_if_user_select_the_bomb() {
+    // |0, 0, 0|
+    // |0, 1, 1|
+    // |0, 1, b|
+    let map = vec![
+        vec![
+            Cell {
+                id: 0,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 0, y: 0 },
+            },
+            Cell {
+                id: 1,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 0, y: 1 },
+            },
+            Cell {
+                id: 2,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(1),
+                position: CellPosition { x: 0, y: 2 },
+            },
+        ],
+        vec![
+            Cell {
+                id: 3,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 1, y: 0 },
+            },
+            Cell {
+                id: 4,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 1, y: 1 },
+            },
+            Cell {
+                id: 5,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(1),
+                position: CellPosition { x: 1, y: 2 },
+            },
+        ],
+        vec![
+            Cell {
+                id: 6,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 2, y: 0 },
+            },
+            Cell {
+                id: 7,
+                state: CellState::Hidden,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 2, y: 1 },
+            },
+            Cell {
+                id: 8,
+                state: CellState::Hidden,
+                ctype: CellType::Mine,
+                position: CellPosition { x: 2, y: 2 },
+            },
+        ],
+    ];
+    let mut battlefield = BattleField::with_map(map);
 
-        battlefield.reveal(0);
+    // Start reveal the bomb's id
+    let revealed = battlefield.reveal(8);
+    let revealed_cells_state = revealed
+        .cells
+        .iter()
+        .map(|cell| cell.state)
+        .collect::<Vec<CellState>>();
 
-        // After revealing we have to have one empty flag left
-        assert_eq!(battlefield.flags_left, 2);
-    }
+    let mut revealed_cells_id = revealed
+        .cells
+        .iter()
+        .map(|cell| cell.id)
+        .collect::<Vec<CellId>>();
+
+    revealed_cells_id.sort_unstable();
+
+    assert_eq!(
+        revealed_cells_state,
+        vec![
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+            CellState::Revealed,
+        ]
+    );
+    assert_eq!(revealed_cells_id, vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
+}
+
+#[test]
+fn should_flag_the_cell() {
+    let map = vec![vec![
+        Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        },
+        Cell {
+            id: 1,
+            state: CellState::Hidden,
+            ctype: CellType::Mine,
+            position: CellPosition { x: 0, y: 0 },
+        },
+    ]];
+    let mut battlefield = BattleField::with_map(map);
+
+    let cell = battlefield.flag(0);
+
+    assert_eq!(
+        cell,
+        &Cell {
+            id: 0,
+            ctype: CellType::Empty(0),
+            state: CellState::Flagged,
+            position: CellPosition { x: 0, y: 0 }
+        }
+    );
+}
+
+#[test]
+fn should_not_flag_the_cell_if_it_is_revealed() {
+    let map = vec![vec![Cell {
+        id: 0,
+        state: CellState::Revealed,
+        ctype: CellType::Empty(0),
+        position: CellPosition { x: 0, y: 0 },
+    }]];
+    let mut battlefield = BattleField::with_map(map);
+
+    let cell = battlefield.flag(0);
+
+    assert_eq!(
+        cell,
+        &Cell {
+            id: 0,
+            state: CellState::Revealed,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 }
+        }
+    );
+}
+
+#[test]
+fn should_unflag_the_cell_if_it_is_flagged() {
+    let map = vec![vec![Cell {
+        id: 0,
+        state: CellState::Flagged,
+        ctype: CellType::Empty(0),
+        position: CellPosition { x: 0, y: 0 },
+    }]];
+    let mut battlefield = BattleField::with_map(map);
+
+    let cell = battlefield.flag(0);
+
+    assert_eq!(
+        cell,
+        &Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 }
+        }
+    );
+}
+
+#[test]
+fn should_build_correct_max_flag_values_counter() {
+    let map = vec![vec![
+        Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        },
+        Cell {
+            id: 1,
+            state: CellState::Hidden,
+            ctype: CellType::Mine,
+            position: CellPosition { x: 0, y: 0 },
+        },
+        Cell {
+            id: 2,
+            state: CellState::Hidden,
+            ctype: CellType::Mine,
+            position: CellPosition { x: 0, y: 0 },
+        },
+    ]];
+    let mut battlefield = BattleField::with_map(map);
+
+    assert_eq!(battlefield.flags_left, 2);
+
+    battlefield.flag(0);
+
+    assert_eq!(battlefield.flags_left, 1);
+}
+
+#[test]
+fn should_not_set_more_flags_that_is_possible() {
+    let map = vec![vec![
+        Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        },
+        Cell {
+            id: 1,
+            state: CellState::Hidden,
+            ctype: CellType::Mine,
+            position: CellPosition { x: 0, y: 0 },
+        },
+        Cell {
+            id: 2,
+            state: CellState::Hidden,
+            ctype: CellType::Mine,
+            position: CellPosition { x: 0, y: 0 },
+        },
+    ]];
+    let mut battlefield = BattleField::with_map(map);
+
+    let cell0 = battlefield.flag(0);
+    assert_eq!(cell0.state, CellState::Flagged);
+
+    let cell1 = battlefield.flag(1);
+    assert_eq!(cell1.state, CellState::Flagged);
+
+    let cell2 = battlefield.flag(2);
+    assert_eq!(cell2.state, CellState::Hidden);
+
+    assert_eq!(battlefield.flags_left, 0);
+}
+
+#[test]
+fn should_unflag_already_flagged_cells() {
+    let map = vec![vec![
+        Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        },
+        Cell {
+            id: 1,
+            state: CellState::Hidden,
+            ctype: CellType::Mine,
+            position: CellPosition { x: 0, y: 0 },
+        },
+        Cell {
+            id: 2,
+            state: CellState::Hidden,
+            ctype: CellType::Mine,
+            position: CellPosition { x: 0, y: 0 },
+        },
+    ]];
+    let mut battlefield = BattleField::with_map(map);
+
+    assert_eq!(battlefield.flags_left, 2);
+    let cell0 = battlefield.flag(0);
+    assert_eq!(cell0.state, CellState::Flagged);
+    assert_eq!(battlefield.flags_left, 1);
+
+    let cell1 = battlefield.flag(1);
+    assert_eq!(cell1.state, CellState::Flagged);
+    assert_eq!(battlefield.flags_left, 0);
+
+    // Should NOT flag the cell by `cell_id: 2`
+    let cell2 = battlefield.flag(2);
+    assert_eq!(cell2.state, CellState::Hidden);
+    assert_eq!(battlefield.flags_left, 0);
+
+    // Should unflag the cell by `cell_id: 0`
+    let cell0 = battlefield.flag(0);
+    assert_eq!(cell0.state, CellState::Hidden);
+    assert_eq!(battlefield.flags_left, 1);
+
+    // Should unflag the cell by `cell_id: 1`
+    let cell1 = battlefield.flag(1);
+    assert_eq!(cell1.state, CellState::Hidden);
+    assert_eq!(battlefield.flags_left, 2);
+
+    // Should flag the cell by `cell_id: 2`
+    let cell2 = battlefield.flag(2);
+    assert_eq!(cell2.state, CellState::Flagged);
+    assert_eq!(battlefield.flags_left, 1);
+}
+
+#[test]
+fn should_have_actual_state_value_when_reveal_flagged_cell() {
+    let map = vec![vec![
+        Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        },
+        Cell {
+            id: 1,
+            state: CellState::Hidden,
+            ctype: CellType::Mine,
+            position: CellPosition { x: 0, y: 1 },
+        },
+        Cell {
+            id: 2,
+            state: CellState::Hidden,
+            ctype: CellType::Mine,
+            position: CellPosition { x: 0, y: 2 },
+        },
+        Cell {
+            id: 3,
+            state: CellState::Hidden,
+            ctype: CellType::Mine,
+            position: CellPosition { x: 0, y: 3 },
+        },
+    ]];
+
+    let mut battlefield = BattleField::with_map(map);
+
+    assert_eq!(battlefield.flags_left, 3);
+
+    // Flag two cells
+    battlefield.flag(0);
+    battlefield.flag(1);
+
+    assert_eq!(battlefield.flags_left, 1);
+
+    battlefield.reveal(0);
+
+    // After revealing we have to have one empty flag left
+    assert_eq!(battlefield.flags_left, 2);
 }
