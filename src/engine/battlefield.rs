@@ -24,6 +24,7 @@ pub struct Reveal {
     pub cells: Vec<Cell>,
 }
 
+/// Public interface for the Battlefield
 impl BattleField {
     /// Creates an empty battlefield map with
     ///  no mines and without any text messages
@@ -114,41 +115,6 @@ impl BattleField {
         }
     }
 
-    /// Creates a battlefield with provided map
-    ///  works only for `test` scenario
-    #[cfg(test)]
-    fn with_map(map: BattlefieldMap) -> Self {
-        let bombs_count = map.iter().fold(0, |outer_acc, row| {
-            outer_acc
-                + row.iter().fold(0, |inner_acc, cell| {
-                    if cell.ctype == CellType::Mine {
-                        inner_acc + 1
-                    } else {
-                        inner_acc
-                    }
-                })
-        });
-
-        Self {
-            map,
-            flags_left: bombs_count,
-            bombs: bombs_count,
-        }
-    }
-
-    /// Generates random bomb location by giving `cols` and `rows`
-    fn get_random_bomb_location(cols: usize, rows: usize) -> CellPosition {
-        let mut rng = rand::thread_rng();
-
-        let random_bomb_col = rng.gen_range(0..cols);
-        let random_bomb_row = rng.gen_range(0..rows);
-
-        CellPosition {
-            x: random_bomb_col as i16,
-            y: random_bomb_row as i16,
-        }
-    }
-
     /// Reveals the cell by provided `id`
     /// Returns a vector of cells which were revealed
     ///  based on internal logic when we have to
@@ -229,6 +195,40 @@ impl BattleField {
         }
     }
 
+    /// Returns a mutable link to the cell by provided `id`
+    pub fn get_mut(&mut self, id: CellId) -> &mut Cell {
+        for row in &mut self.map {
+            for cell in row {
+                if cell.id == id {
+                    return cell;
+                }
+            }
+        }
+
+        panic!("Cell didn't find in battlefield by provided id: {}", id);
+    }
+
+    /// Returns all matrix map
+    pub fn get_all(&self) -> &Vec<Vec<Cell>> {
+        &self.map
+    }
+}
+
+/// Private interface for the Battlefield
+impl BattleField {
+    /// Generates random bomb location by giving `cols` and `rows`
+    fn get_random_bomb_location(cols: usize, rows: usize) -> CellPosition {
+        let mut rng = rand::thread_rng();
+
+        let random_bomb_col = rng.gen_range(0..cols);
+        let random_bomb_row = rng.gen_range(0..rows);
+
+        CellPosition {
+            x: random_bomb_col as i16,
+            y: random_bomb_row as i16,
+        }
+    }
+
     /// Reveals the cell and iteratively execute `flood_fill` method
     ///  to calculate all near cells and reveal them too if
     ///  they have an `Empty` status and the value of the
@@ -271,19 +271,6 @@ impl BattleField {
         }
     }
 
-    /// Returns a mutable link to the cell by provided `id`
-    pub fn get_mut(&mut self, id: CellId) -> &mut Cell {
-        for row in &mut self.map {
-            for cell in row {
-                if cell.id == id {
-                    return cell;
-                }
-            }
-        }
-
-        panic!("Cell didn't find in battlefield by provided id: {}", id);
-    }
-
     /// Returns immutable link to the cell by provided `id`
     fn get(&self, id: CellId) -> &Cell {
         for row in &self.map {
@@ -310,11 +297,6 @@ impl BattleField {
         }
     }
 
-    /// Returns all matrix map
-    pub fn get_all(&self) -> &Vec<Vec<Cell>> {
-        &self.map
-    }
-
     /// Returns count of how many flags are left
     ///
     /// Note: It's very consumable method which
@@ -332,6 +314,31 @@ impl BattleField {
         }
 
         flags_left
+    }
+}
+
+/// Battlefield configuration for tests
+#[cfg(test)]
+impl BattleField {
+    /// Creates a battlefield with provided map
+    ///  works only for `test` scenario
+    fn with_map(map: BattlefieldMap) -> Self {
+        let bombs_count = map.iter().fold(0, |outer_acc, row| {
+            outer_acc
+                + row.iter().fold(0, |inner_acc, cell| {
+                    if cell.ctype == CellType::Mine {
+                        inner_acc + 1
+                    } else {
+                        inner_acc
+                    }
+                })
+        });
+
+        Self {
+            map,
+            flags_left: bombs_count,
+            bombs: bombs_count,
+        }
     }
 }
 
