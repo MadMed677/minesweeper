@@ -1,4 +1,4 @@
-mod engine;
+pub mod engine;
 mod wasm;
 
 pub use wasm::MineSweeperEngine;
