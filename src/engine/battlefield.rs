@@ -14,6 +14,9 @@ pub struct BattleField {
     /// How many flags user may set
     ///  it's the same value as bombs
     pub flags_left: u16,
+
+    /// How many bombs has been placed on the map
+    bombs: u16,
 }
 
 pub struct Reveal {
@@ -100,23 +103,6 @@ impl BattleField {
 
                         cell.ctype = new_type;
                     }
-
-                    // let option_cell = Self::get_by_position(
-                    //     &mut battlefield_map,
-                    //     CellPosition {
-                    //         x: bomb_position.x + col,
-                    //         y: bomb_position.y + row,
-                    //     },
-                    // );
-                    //
-                    // if let Some(cell) = option_cell {
-                    //     let new_type = match cell.ctype {
-                    //         CellType::Mine => CellType::Mine,
-                    //         CellType::Empty(count) => CellType::Empty(count + 1),
-                    //     };
-                    //
-                    //     cell.ctype = new_type;
-                    // }
                 }
             }
         }
@@ -124,6 +110,7 @@ impl BattleField {
         Self {
             map: battlefield_map,
             flags_left: bombs,
+            bombs,
         }
     }
 
@@ -145,6 +132,7 @@ impl BattleField {
         Self {
             map,
             flags_left: bombs_count,
+            bombs: bombs_count,
         }
     }
 
@@ -190,11 +178,17 @@ impl BattleField {
                 }
             }
 
+            let flags_left = self.flags_left();
+            self.flags_left = flags_left;
+
             Reveal {
                 game_is_over: true,
                 cells: revealed_cells_accumulator,
             }
         } else {
+            let flags_left = self.flags_left();
+            self.flags_left = flags_left;
+
             Reveal {
                 game_is_over: false,
                 cells: revealed_cells_accumulator,
@@ -319,6 +313,25 @@ impl BattleField {
     /// Returns all matrix map
     pub fn get_all(&self) -> &Vec<Vec<Cell>> {
         &self.map
+    }
+
+    /// Returns count of how many flags are left
+    ///
+    /// Note: It's very consumable method which
+    ///  iterate through all cells on the battlefield
+    ///  and count how many cells aren't flagged
+    fn flags_left(&self) -> u16 {
+        let mut flags_left = self.bombs;
+
+        for row in &self.map {
+            for cell in row {
+                if cell.state == CellState::Flagged {
+                    flags_left -= 1;
+                }
+            }
+        }
+
+        flags_left
     }
 }
 
@@ -909,6 +922,51 @@ mod battlefield_test {
             let cell2 = battlefield.flag(2);
             assert_eq!(cell2.state, CellState::Flagged);
             assert_eq!(battlefield.flags_left, 1);
+        }
+
+        #[test]
+        fn should_have_actual_state_value_when_reveal_flagged_cell() {
+            let map = vec![vec![
+                Cell {
+                    id: 0,
+                    state: CellState::Hidden,
+                    ctype: CellType::Empty(0),
+                    position: CellPosition { x: 0, y: 0 },
+                },
+                Cell {
+                    id: 1,
+                    state: CellState::Hidden,
+                    ctype: CellType::Mine,
+                    position: CellPosition { x: 0, y: 1 },
+                },
+                Cell {
+                    id: 2,
+                    state: CellState::Hidden,
+                    ctype: CellType::Mine,
+                    position: CellPosition { x: 0, y: 2 },
+                },
+                Cell {
+                    id: 3,
+                    state: CellState::Hidden,
+                    ctype: CellType::Mine,
+                    position: CellPosition { x: 0, y: 3 },
+                },
+            ]];
+
+            let mut battlefield = BattleField::with_map(map);
+
+            assert_eq!(battlefield.flags_left, 3);
+
+            // Flag two cells
+            battlefield.flag(0);
+            battlefield.flag(1);
+
+            assert_eq!(battlefield.flags_left, 1);
+
+            battlefield.reveal(0);
+
+            // After revealing we have to have one empty flag left
+            assert_eq!(battlefield.flags_left, 2);
         }
     }
 }

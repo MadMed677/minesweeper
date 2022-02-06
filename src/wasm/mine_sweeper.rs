@@ -87,6 +87,7 @@ impl MineSweeperEngine {
             self.game_state.status = GameStatus::Won;
         }
 
+        self.game_state.flags = self.battlefield.flags_left;
         self.on_game_changed(&self.game_state);
 
         cells
