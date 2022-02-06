@@ -83,13 +83,88 @@ impl Cell {
     }
 }
 
-#[cfg(test)]
-mod battlefield_cell {
-    use crate::engine::{Cell, CellPosition, CellState, CellType};
+#[test]
+fn should_create_cell_via_constructor() {
+    let cell = Cell::new(0, CellType::Empty(0), CellPosition { x: 0, y: 0 });
+
+    assert_eq!(
+        cell,
+        Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        }
+    );
+}
+
+mod revealing {
+    use crate::engine::*;
 
     #[test]
-    fn should_create_cell_via_constructor() {
-        let cell = Cell::new(0, CellType::Empty(0), CellPosition { x: 0, y: 0 });
+    fn should_reveal_the_cell() {
+        let mut cell = Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        };
+
+        cell.reveal();
+
+        assert_eq!(
+            cell,
+            Cell {
+                id: 0,
+                state: CellState::Revealed,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 0, y: 0 },
+            }
+        );
+    }
+}
+
+mod flagging {
+    use crate::engine::*;
+
+    #[test]
+    fn should_flag_the_cell() {
+        let mut cell = Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        };
+
+        let is_flagged = cell.flag();
+
+        assert_eq!(
+            cell,
+            Cell {
+                id: 0,
+                state: CellState::Flagged,
+                ctype: CellType::Empty(0),
+                position: CellPosition { x: 0, y: 0 },
+            }
+        );
+
+        assert!(is_flagged);
+    }
+
+    #[test]
+    fn should_unflag_the_cell() {
+        let mut cell = Cell {
+            id: 0,
+            state: CellState::Hidden,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        };
+
+        // Should flag the cell
+        cell.flag();
+
+        // Should unflag the cell
+        cell.flag();
 
         assert_eq!(
             cell,
@@ -102,108 +177,28 @@ mod battlefield_cell {
         );
     }
 
-    mod revealing {
-        use crate::engine::*;
+    #[test]
+    fn should_not_flag_the_cell_if_it_is_revealed() {
+        let mut cell = Cell {
+            id: 0,
+            state: CellState::Revealed,
+            ctype: CellType::Empty(0),
+            position: CellPosition { x: 0, y: 0 },
+        };
 
-        #[test]
-        fn should_reveal_the_cell() {
-            let mut cell = Cell {
-                id: 0,
-                state: CellState::Hidden,
-                ctype: CellType::Empty(0),
-                position: CellPosition { x: 0, y: 0 },
-            };
+        // Should NOT flag the cell
+        let is_flagged = cell.flag();
 
-            cell.reveal();
-
-            assert_eq!(
-                cell,
-                Cell {
-                    id: 0,
-                    state: CellState::Revealed,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 0, y: 0 },
-                }
-            );
-        }
-    }
-
-    mod flagging {
-        use crate::engine::*;
-
-        #[test]
-        fn should_flag_the_cell() {
-            let mut cell = Cell {
-                id: 0,
-                state: CellState::Hidden,
-                ctype: CellType::Empty(0),
-                position: CellPosition { x: 0, y: 0 },
-            };
-
-            let is_flagged = cell.flag();
-
-            assert_eq!(
-                cell,
-                Cell {
-                    id: 0,
-                    state: CellState::Flagged,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 0, y: 0 },
-                }
-            );
-
-            assert!(is_flagged);
-        }
-
-        #[test]
-        fn should_unflag_the_cell() {
-            let mut cell = Cell {
-                id: 0,
-                state: CellState::Hidden,
-                ctype: CellType::Empty(0),
-                position: CellPosition { x: 0, y: 0 },
-            };
-
-            // Should flag the cell
-            cell.flag();
-
-            // Should unflag the cell
-            cell.flag();
-
-            assert_eq!(
-                cell,
-                Cell {
-                    id: 0,
-                    state: CellState::Hidden,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 0, y: 0 },
-                }
-            );
-        }
-
-        #[test]
-        fn should_not_flag_the_cell_if_it_is_revealed() {
-            let mut cell = Cell {
+        assert_eq!(
+            cell,
+            Cell {
                 id: 0,
                 state: CellState::Revealed,
                 ctype: CellType::Empty(0),
                 position: CellPosition { x: 0, y: 0 },
-            };
+            }
+        );
 
-            // Should NOT flag the cell
-            let is_flagged = cell.flag();
-
-            assert_eq!(
-                cell,
-                Cell {
-                    id: 0,
-                    state: CellState::Revealed,
-                    ctype: CellType::Empty(0),
-                    position: CellPosition { x: 0, y: 0 },
-                }
-            );
-
-            assert!(!is_flagged);
-        }
+        assert!(!is_flagged);
     }
 }
